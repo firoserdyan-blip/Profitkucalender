@@ -1,0 +1,774 @@
+<!doctype html>
+
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ProfitKu - Profit Calendar</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+
+<style>
+/* 🎨 KODE CSS FINAL */
+:root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#6b7280;
+    --accent:#2563eb;
+    --green:#16a34a; 
+    --red:#dc2626; 
+    --input-bg:#ffffff;
+    --input-border:rgba(15,23,42,0.12);
+    --shadow:0 6px 18px rgba(15,23,42,0.06);
+    --grid-bg:linear-gradient(180deg,#fff,#fbfdff);
+}
+[data-theme="dark"] {
+    --bg:#1f2937;
+    --card:#374151;
+    --text:#f9fafb;
+    --muted:#9ca3af;
+    --accent:#60a5fa;
+    --green:#4ade80; 
+    --red:#f87171; 
+    --input-bg:#4b5563;
+    --input-border:rgba(255,255,255,0.15);
+    --shadow:0 6px 18px rgba(0,0,0,0.3);
+    --grid-bg:#374151; 
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+body{margin:0;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:15px;transition:background 0.3s, color 0.3s;}
+.card{background:var(--card);padding:20px;border-radius:12px;box-shadow:var(--shadow);width:100%;max-width:400px;transition:background 0.3s, box-shadow 0.3s;}
+h1{margin-top:0;text-align:center;color:var(--text);}
+
+input[type="email"]{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid var(--input-border);box-sizing: border-box;background:var(--input-bg);color:var(--text);}
+
+.password-container{position: relative;margin-top: 10px;}
+.password-container input[type="password"], 
+.password-container input[type="text"] { 
+    width:100%;padding:10px 40px 10px 10px;border-radius:8px;border:1px solid var(--input-border);box-sizing: border-box;margin-top: 0;
+    background:var(--input-bg);color:var(--text);
+}
+.password-toggle{position: absolute;right: 10px;top: 50%;transform: translateY(-50%);cursor: pointer;color: var(--muted);font-size: 18px;user-select: none;z-index: 10;}
+
+button{width:100%;padding:10px;margin-top:14px;background:var(--accent);color:white;border:0;border-radius:8px;cursor:pointer;transition:background 0.2s;}
+button:hover{filter:brightness(1.1);}
+
+.wrap{display:none;max-width:980px;margin:28px auto;padding:0 15px;width:100%;}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:0 5px;}
+.controls{display:flex;gap:8px;align-items:center;}
+
+.calendar{
+    margin-top:18px;display:flex;flex-direction:column;align-items:center;padding: 0 20px; box-sizing: border-box;width: 100%; 
+}
+.cal-header{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:700px;flex-wrap:wrap;gap:10px;margin-bottom: 10px;}
+.grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:4px;
+    width:100%;
+} 
+.day{
+    min-height: 55px; padding: 2px; border-radius: 8px;border: 1px solid rgba(15,23,42,0.04);
+    background: var(--grid-bg);text-align: center;display: flex; 
+    flex-direction: column;justify-content: center;align-items: center;font-size: 10px; 
+    line-height: 1.1;cursor: pointer;overflow: hidden;white-space: normal;
+    transition: background 0.3s;
+}
+[data-theme="dark"] .day {
+    border: 1px solid rgba(255,255,255,0.08); 
+}
+.day .date{font-size:10px;color:var(--muted)}
+
+/* Gaya untuk ikon catatan */
+.day .note-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 8px;
+    color: var(--accent);
+}
+
+.amount{margin-top:1px;font-weight:600;font-size:11px;white-space: nowrap; color: var(--text);} 
+.amount.loss { color: var(--red); } 
+.amount.profit { color: var(--green); } 
+
+.today{box-shadow:0 0 0 2px var(--accent);border:1px solid rgba(37,99,235,0.2);}
+
+.summary{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center;width:100%;max-width:700px;}
+.stat{
+    flex:1;min-width:110px;background:var(--grid-bg);padding:10px; 
+    border-radius:10px;text-align:center;box-shadow:0 2px 4px rgba(15,23,42,0.03);
+    display: flex;flex-direction: column;justify-content: space-between; 
+    transition: background 0.3s, box-shadow 0.3s;
+}
+[data-theme="dark"] .stat {
+    box-shadow:0 2px 4px rgba(0,0,0,0.2);
+}
+.stat .value-display.loss {color: var(--red);} 
+.stat .value-display.profit {color: var(--green);} 
+
+.quick-action-bar{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;max-width:700px;}
+input[type=number], input[type=date], select{ 
+    width:auto;padding:8px;border-radius:6px;border:1px solid var(--input-border);flex:1;
+    background:var(--input-bg);color:var(--text); transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+#quickSave{width:auto;flex:none;margin-top:0;}
+
+.footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;width:100%;}
+.actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    margin-top:0;
+}
+.btn{background:var(--accent);color:white;padding:8px 10px;border-radius:8px;border:0;cursor:pointer;white-space:nowrap; width: auto !important;}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
+
+#editorModal {
+    position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); 
+    z-index:1000; align-items:center; justify-content:center;
+    display: none; 
+}
+[data-theme="dark"] #editorModal {
+    background:rgba(0,0,0,0.8);
+}
+
+.modal-content-container {
+    max-width: 300px;
+    padding: 20px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text);
+    resize: vertical;
+    min-height: 80px;
+    box-sizing: border-box; 
+}
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--card);
+    cursor: pointer;
+    font-size: 14px;
+    border: 1px solid var(--input-border);
+    color: var(--text);
+    transition: background 0.3s;
+    width: auto;
+    max-width: 110px; 
+    justify-content: center;
+}
+.theme-toggle .icon {
+    font-size: 16px;
+}
+
+@media (max-width: 500px){
+    .calendar {margin-left: 0; right: 0; width: 100%;padding: 0 0;}
+    .day {min-height: 50px;}
+    header {flex-direction: column; align-items: flex-start;}
+    .controls {width: 100%; justify-content: space-between;}
+    .summary {max-width: none;}
+    .stat {min-width: 100%;}
+    .quick-action-bar input, .quick-action-bar button, .quick-action-bar select {flex: 1 1 45%;}
+    #quickSave {flex: 1 1 100%; margin-top: 5px;}
+    
+    .cal-header .actions {
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        width: 100%;
+        gap: 8px; 
+        margin-top: 8px; 
+        justify-content: space-between;
+    }
+    .cal-header .actions > * {
+        margin-top: 0 !important; 
+        width: 100% !important; 
+        box-sizing: border-box;
+    }
+    
+    #weekdayHeader .muted.small {
+        font-size: 10px; 
+        font-weight: 600; 
+    }
+}
+</style>
+</head>
+<body>
+<div class="card" id="loginCard">
+    <h1>Login/Register</h1>
+    <input type="email" id="email" placeholder="Email" />
+    
+    <div class="password-container">
+        <input type="password" id="password" placeholder="Password (min 6 karakter)" />
+        <span class="password-toggle" id="togglePassword">&#x1f441;</span> 
+    </div>
+    
+    <button id="loginBtn">Login</button>
+    <button class="btn ghost" id="registerBtn" style="margin-top: 8px;">Daftar Akun Baru</button>
+</div>
+<div class="wrap" id="app">
+    <header>
+        <div>
+            <h1>Profit Calendar</h1>
+            <div class="muted small">Catat profit harian — data aman dan pribadi di CLOUD</div>
+        </div>
+        <div class="controls">
+            <div class="card small">Current account: <strong id="acctEmail"></strong></div>
+            <button class="btn ghost" id="logoutBtn">Logout</button>
+        </div>
+    </header>
+    <div class="card calendar">
+        <div class="cal-header" style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:700px;flex-wrap:wrap;gap:10px">
+            
+            <div style="display:flex;align-items:center;gap:12px">
+                <button class="nav-btn" id="prev">◀</button>
+                <div style="font-weight:600" id="monthLabel">—</div>
+                <button class="nav-btn" id="next">▶</button>
+            </div>
+
+            <div class="actions">
+                <div class="theme-toggle" id="themeToggle" style="margin-top:0;">
+                    <span class="icon">☀️</span> <span id="themeLabel">Terang</span>
+                </div>
+                <select id="currencySelect" style="margin-top:0; max-width: 100px;">
+                    <option value="USD">USD ($)</option>
+                    <option value="IDR">IDR (Rp)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="JPY">JPY (¥)</option>
+                    <option value="BTC">BTC (₿)</option>
+                </select>
+                <button class="btn" id="todayBtn" style="margin-top:0;">Hari Ini</button>
+                <button class="btn export" id="exportCsv" style="margin-top:0;">Export CSV</button>
+            </div>
+            
+        </div>
+        
+        <div class="grid" id="weekdayHeader">
+        </div>
+        
+        <div class="grid" id="calendarGrid"></div>
+        <div class="summary">
+            <div class="stat">
+                <div class="small muted">Total (month)</div>
+                <div style="font-size:18px" id="monthTotal" class="value-display">$0</div>
+            </div>
+            <div class="stat">
+                <div class="small muted">Avg per hari data</div>
+                <div style="font-size:18px" id="avgDay" class="value-display">$0</div>
+            </div>
+            <div class="stat">
+                <div style="font-size:13px" class="small muted"># Days Recorded</div>
+                <div style="font-size:18px" id="daysCount">0</div>
+            </div>
+        </div>
+        
+        <div class="quick-action-bar">
+            <input type="date" id="quickDate" />
+            <input type="number" step="0.01" id="quickAmt" placeholder="Profit (boleh negatif)" />
+            <button class="btn" id="quickSave">Simpan</button>
+        </div>
+        
+        <div class="footer">Data aman, sinkron di semua device, dan terproteksi oleh login Firebase.</div>
+    </div>
+</div>
+
+<div id="editorModal" style="display:none;" class="modal-overlay">
+    <div class="modal-content-container">
+        <h3 id="editorTitle">Edit Data</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <div class="muted small" style="margin-bottom: 5px;">Jumlah Profit / Loss:</div>
+            <input type="number" step="0.01" id="editorAmt" placeholder="Profit (e.g., 10000.00)" style="width: 100%;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <div class="muted small" style="margin-bottom: 5px;">Catatan/Deskripsi Harian:</div>
+            <textarea id="editorNote" placeholder="Tulis catatan harian (misal: 'Profit dari investasi saham A' atau 'Loss karena entry telat')"></textarea>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn ghost" id="closeEditorBtn" style="flex:1; margin-top:0;">Batal</button>
+            <button class="btn" id="saveEditorBtn" style="flex:1; margin-top:0;">Simpan</button>
+        </div>
+        <button class="btn ghost" id="deleteEditorBtn" style="background:transparent; color:#dc2626; border:1px solid rgba(220,38,38,0.3); margin-top:10px;">Hapus Data</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 🔑 KONFIGURASI FIREBASE 
+    const firebaseConfig = {
+      apiKey: "AIzaSyDIRmr2lJWqmoeoZHYIpakc8N_11JQ1Mo8",
+      authDomain: "profitku-a5f3a.firebaseapp.com",
+      databaseURL: "https://profitku-a5f3a-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "profitku-a5f3a",
+      storageBucket: "profitku-a5f3a.firebasestorage.app",
+      messagingSenderId: "222392994535",
+      appId: "1:222392994535:web:a8e13f3238dedaae367042",
+      measurementId: "G-LZ7ZQJC86F"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const database = firebase.database();
+    const auth = firebase.auth(); 
+
+    const CURRENCY_SYMBOLS = {
+        'USD': '$', 'IDR': 'Rp', 'EUR': '€', 'JPY': '¥', 'BTC': '₿',
+    };
+
+    let currentUserId = null; 
+    
+    // STRUKTUR DATA DIPERBARUI: { entries: { '2025-10-01': { amount: 55.00, note: '...' }, ... } }
+    let data = { entries: {}, currency: 'USD' }; 
+    
+    const html = document.documentElement; 
+    const loginCard = document.getElementById('loginCard');
+    const app = document.getElementById('app');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const acctEmail = document.getElementById('acctEmail');
+    const currencySelect = document.getElementById('currencySelect'); 
+    const editorModal = document.getElementById('editorModal');
+    const editorTitle = document.getElementById('editorTitle');
+    const editorAmtInput = document.getElementById('editorAmt');
+    const editorNoteInput = document.getElementById('editorNote'); // INPUT BARU
+    const quickDate = document.getElementById('quickDate');
+    const quickAmt = document.getElementById('quickAmt');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+    const themeIcon = themeToggle ? themeToggle.querySelector('.icon') : null;
+
+    let editingYMD = null; 
+    const today = new Date();
+    let viewYear = today.getFullYear();
+    let viewMonth = today.getMonth();
+
+    function formatYMD(y,m,d){ 
+        const mm=String(m+1).padStart(2,'0'); 
+        const dd=String(d).padStart(2,'0'); 
+        return `${y}-${mm}-${dd}`; 
+    }
+    
+    function getDbPath(uid) {
+        return 'users/' + uid;
+    }
+
+    async function loadData(uid){ 
+        try {
+            const snapshot = await database.ref(getDbPath(uid)).once('value');
+            const loadedData = snapshot.val() || {entries:{}, currency: 'USD'}; 
+            if (!loadedData.currency) { loadedData.currency = 'USD'; }
+            
+            // Konversi data lama (hanya angka) ke format objek baru jika ada
+            for (const key in loadedData.entries) {
+                if (typeof loadedData.entries[key] === 'number') {
+                    loadedData.entries[key] = { amount: loadedData.entries[key], note: '' };
+                }
+            }
+            
+            return loadedData;
+        } catch (error) {
+            console.error("Error loading data from Firebase:", error);
+            return {entries:{}, currency: 'USD'};
+        }
+    }
+    
+    async function saveData(uid){ 
+        if (!uid) return;
+        try {
+            // Pastikan kita menyimpan data dalam struktur baru (objek)
+            const entriesToSave = {};
+            for (const ymd in data.entries) {
+                const entry = data.entries[ymd];
+                // Hapus entry jika jumlahnya 0 dan catatan kosong
+                if (entry.amount !== 0 || entry.note !== '') {
+                     entriesToSave[ymd] = entry;
+                }
+            }
+            data.entries = entriesToSave;
+            await database.ref(getDbPath(uid)).set({ entries: data.entries, currency: data.currency });
+        } catch (error) {
+            console.error("Error saving data to Firebase:", error);
+            alert("Gagal menyimpan data ke cloud.");
+        }
+    }
+
+    async function showApp(user){
+        if (loginCard) loginCard.style.display = 'none';
+        if (app) app.style.display = 'block';
+        
+        currentUserId = user.uid;
+        if (acctEmail) acctEmail.textContent = user.email;
+      
+        data = await loadData(user.uid);
+        if(currencySelect) currencySelect.value = data.currency; 
+        renderCalendar();
+    }
+
+    function formatCurrency(amount, currencyCode) {
+        const symbol = CURRENCY_SYMBOLS[currencyCode] || '$';
+        const isLoss = amount < 0;
+        const isProfit = amount > 0;
+        
+        let displayAmount;
+        if (currencyCode === 'IDR' && Math.abs(amount) >= 10000) {
+            displayAmount = Math.abs(amount).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        } else {
+            displayAmount = Math.abs(amount).toFixed(2);
+        }
+        
+        const absoluteDisplayAmount = displayAmount.replace('-', '');
+        let formattedString;
+
+        if (currencyCode === 'IDR') {
+            formattedString = (isLoss ? `-${symbol}${absoluteDisplayAmount}` : `${symbol}${absoluteDisplayAmount}`);
+        } 
+        else if (currencyCode === 'BTC') {
+            formattedString = (isLoss ? `-${symbol} ${absoluteDisplayAmount}` : `${symbol} ${absoluteDisplayAmount}`);
+        }
+        else {
+            formattedString = (isLoss ? `-${symbol}${absoluteDisplayAmount}` : `${symbol}${absoluteDisplayAmount}`);
+        }
+
+        if (isLoss) {
+            return `<span style="color: var(--red);">${formattedString}</span>`;
+        } else if (isProfit) {
+            return `<span style="color: var(--green);">${formattedString}</span>`;
+        } else {
+            return formattedString;
+        }
+    }
+
+    function togglePasswordVisibility() {
+        if (!passwordInput) return; 
+        const toggleIcon = document.getElementById('togglePassword');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            if (toggleIcon) toggleIcon.innerHTML = '&#x1f440;'; 
+        } else {
+            passwordInput.type = 'password';
+            if (toggleIcon) toggleIcon.innerHTML = '&#x1f441;'; 
+        }
+    }
+    
+    function applyTheme(theme) {
+        html.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'Gelap' : 'Terang';
+        if (themeIcon) themeIcon.innerHTML = theme === 'dark' ? '🌙' : '☀️';
+    }
+
+    const storedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(storedTheme); 
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+        });
+    }
+    
+    function renderWeekdayHeader() {
+        const weekdayHeader = document.getElementById('weekdayHeader');
+        if (!weekdayHeader) return;
+        weekdayHeader.innerHTML = ''; 
+
+        const userLocale = navigator.language || navigator.userLanguage || 'en-US'; 
+        const formatter = new Intl.DateTimeFormat(userLocale, { weekday: 'long' });
+
+        const today = new Date();
+        const startDay = today.getDate() - today.getDay(); 
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today.setDate(startDay + i));
+            let dayName = formatter.format(date);
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'muted small';
+            dayDiv.textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+            weekdayHeader.appendChild(dayDiv);
+        }
+        
+        document.getElementById('monthLabel').textContent = new Date(viewYear,viewMonth,1).toLocaleString(userLocale, {month:'long'})+' '+viewYear;
+    }
+
+    
+    const togglePasswordBtn = document.getElementById('togglePassword'); 
+    if (togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+    }
+    
+    const loginBtn = document.getElementById('loginBtn');
+    if(loginBtn) loginBtn.addEventListener('click', async ()=>{
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      if(!email || password.length < 6){ alert('Masukkan email dan password minimal 6 karakter'); return; }
+      try {
+          await auth.signInWithEmailAndPassword(email, password);
+      } catch(error) {
+          alert("Login Gagal: " + error.message);
+      }
+    });
+
+    const registerBtn = document.getElementById('registerBtn');
+    if(registerBtn) registerBtn.addEventListener('click', async ()=>{
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      if(!email || password.length < 6){ alert('Masukkan email dan password minimal 6 karakter'); return; }
+      try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          alert('Registrasi Berhasil! Anda sekarang login.');
+      } catch(error) {
+          alert("Registrasi Gagal: " + error.message);
+      }
+    });
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) logoutBtn.addEventListener('click',()=>{
+      auth.signOut();
+    });
+    
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+          showApp(user);
+      } else {
+          if (loginCard) loginCard.style.display = 'block';
+          if (app) app.style.display = 'none';
+          currentUserId = null;
+          renderWeekdayHeader(); 
+      }
+    });
+
+    if(currencySelect) currencySelect.addEventListener('change', async (e) => {
+        data.currency = e.target.value;
+        if (currentUserId) {
+            await saveData(currentUserId); 
+        }
+        renderCalendar();
+    });
+
+    function renderCalendar(){
+      const grid = document.getElementById('calendarGrid'); 
+      if(!grid) return; 
+
+      grid.innerHTML='';
+      renderWeekdayHeader(); 
+
+      const firstDay = new Date(viewYear,viewMonth,1).getDay();
+      const daysInMonth = new Date(viewYear,viewMonth+1,0).getDate();
+      for(let i=0;i<firstDay;i++){
+        const emptyCell = document.createElement('div');
+        emptyCell.className='day'; grid.appendChild(emptyCell);
+      }
+      for(let d=1;d<=daysInMonth;d++){
+        const ymd = formatYMD(viewYear,viewMonth,d);
+        // AMBIL DATA DARI STRUKTUR BARU
+        const entry = data.entries[ymd] || { amount: 0, note: '' };
+        const amt = entry.amount;
+        const note = entry.note;
+        
+        const cell = document.createElement('div'); 
+        cell.className='day card-item';
+        
+        if(ymd===formatYMD(today.getFullYear(),today.getMonth(),today.getDate())) cell.classList.add('today');
+        
+        const amountDisplay = formatCurrency(amt, data.currency); 
+        const lossClass = amt < 0 ? ' loss' : (amt > 0 ? ' profit' : '');
+        
+        // TAMBAHKAN INDIKATOR CATATAN
+        let noteIndicator = note.trim() !== '' ? '<span class="note-indicator">📝</span>' : '';
+
+        cell.innerHTML=`
+            <div class="date">${d}</div>
+            ${noteIndicator}
+            <div class="amount${lossClass}" data-date="${ymd}">${amountDisplay}</div>
+        `;
+        
+        cell.addEventListener('click',()=> openEditor(ymd,amt, note));
+        grid.appendChild(cell);
+      }
+      updateSummary();
+    }
+    
+    // FUNGSI openEditor DIPERBARUI UNTUK MENAMPILKAN CATATAN
+    function openEditor(ymd, amt, note) {
+      if (!editorModal) return;
+      editingYMD = ymd;
+      editorTitle.textContent = `Edit Data ${ymd} (${data.currency})`; // Judul modal diperbarui
+      editorAmtInput.value = amt === 0 ? '' : String(amt); 
+      editorNoteInput.value = note || ''; // Isi input catatan
+      editorModal.style.display = 'flex'; 
+      editorAmtInput.focus();
+    }
+    
+    function closeEditor() {
+      if (editorModal) editorModal.style.display = 'none'; 
+      editingYMD = null;
+    }
+    
+    // FUNGSI saveEditorBtn DIPERBARUI UNTUK MENYIMPAN CATATAN
+    const saveEditorBtn = document.getElementById('saveEditorBtn');
+    if(saveEditorBtn) saveEditorBtn.addEventListener('click', async () => {
+      if (!editingYMD || !currentUserId) return; 
+      const n = editorAmtInput.value.trim();
+      const noteText = editorNoteInput.value.trim(); // Ambil nilai catatan
+      
+      const num = Number(n === '' ? '0' : n);
+      if (isNaN(num)) {
+          alert('Masukkan angka profit yang valid!');
+          return;
+      }
+      
+      const roundedNum = Number(num.toFixed(2));
+      
+      if (roundedNum === 0 && noteText === '') {
+          // Jika keduanya kosong/nol, hapus data untuk menghemat ruang
+          delete data.entries[editingYMD];
+      } else {
+          // Simpan data dalam struktur objek baru
+          data.entries[editingYMD] = { amount: roundedNum, note: noteText };
+      }
+      
+      closeEditor();
+      await saveData(currentUserId); 
+      renderCalendar();
+    });
+
+    const closeEditorBtn = document.getElementById('closeEditorBtn');
+    if(closeEditorBtn) closeEditorBtn.addEventListener('click', closeEditor);
+    
+    const deleteEditorBtn = document.getElementById('deleteEditorBtn');
+    if(deleteEditorBtn) deleteEditorBtn.addEventListener('click', async () => {
+      if(!currentUserId) return; 
+      if(confirm(`Yakin hapus data hari ${editingYMD}? (Profit & Catatan)`)){
+          delete data.entries[editingYMD];
+          closeEditor();
+          await saveData(currentUserId); 
+          renderCalendar();
+      }
+    });
+
+    function updateSummary(){
+        const monthTotalEl = document.getElementById('monthTotal');
+        const avgDayEl = document.getElementById('avgDay');
+        const daysCountEl = document.getElementById('daysCount');
+        
+        if (!monthTotalEl || !avgDayEl || !daysCountEl || !quickAmt) return;
+        
+        const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
+        let total=0,count=0;
+        
+        // LOOP PADA STRUKTUR DATA BARU
+        for(const k in data.entries){ 
+            if(k.startsWith(monthKeyPrefix)){ 
+                const entry = data.entries[k];
+                const amount = Number(entry.amount || 0); // Pastikan mengambil properti amount
+                total += amount; 
+                if(amount !== 0 || entry.note.trim() !== '') count++; // Hitung hari jika ada profit/loss atau catatan
+            }
+        }
+        
+        const totalDisplay = formatCurrency(total, data.currency);
+        monthTotalEl.innerHTML = totalDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
+        
+        monthTotalEl.classList.remove('loss', 'profit');
+        if (total < 0) {
+            monthTotalEl.classList.add('loss'); 
+        } else if (total > 0) {
+            monthTotalEl.classList.add('profit');
+        }
+        
+        const avgDay = count ? (total / count) : 0;
+        const avgDisplay = formatCurrency(avgDay, data.currency);
+        avgDayEl.innerHTML = avgDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
+        
+        avgDayEl.classList.remove('loss', 'profit');
+        if (avgDay < 0) {
+            avgDayEl.classList.add('loss');
+        } else if (avgDay > 0) {
+            avgDayEl.classList.add('profit');
+        }
+        
+        daysCountEl.textContent = count;
+        quickAmt.placeholder = `Profit ${data.currency} (boleh negatif)`;
+    }
+
+    const prevBtn = document.getElementById('prev');
+    if(prevBtn) prevBtn.addEventListener('click',()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
+    
+    const nextBtn = document.getElementById('next');
+    if(nextBtn) nextBtn.addEventListener('click',()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
+    
+    const todayBtn = document.getElementById('todayBtn');
+    if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
+
+    const quickSave = document.getElementById('quickSave');
+    if(quickSave) quickSave.addEventListener('click', async ()=>{
+      if(!currentUserId) return alert('Silakan login terlebih dahulu!'); 
+      if(!quickDate) return; 
+      const d = quickDate.value;
+      const a = quickAmt.value;
+      if(!d){ alert('Pilih tanggal'); return; }
+      const num = Number(a); 
+      if(isNaN(num)){ alert('Masukkan angka profit yang valid!'); return; }
+      
+      // Simpan data cepat HANYA untuk amount, catatan kosong
+      data.entries[d] = { amount: Number(num.toFixed(2)), note: '' }; 
+      
+      await saveData(currentUserId); 
+      renderCalendar();
+      quickAmt.value='';
+    });
+
+    const exportCsv = document.getElementById('exportCsv');
+    if(exportCsv) exportCsv.addEventListener('click', ()=>{
+        // HEADER CSV DIPERBARUI
+        const rows=[['date','profit_amount', 'currency', 'note']]; 
+        let totalProfit = 0; 
+        
+        // LOOP PADA STRUKTUR DATA BARU
+        for(const k of Object.keys(data.entries).sort()) {
+            const entry = data.entries[k];
+            const amount = entry.amount || 0;
+            const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); // Ganti koma dengan titik koma agar tidak merusak CSV
+            rows.push([k, String(amount), data.currency, note]);
+            totalProfit += amount;
+        }
+        const totalLabel = (totalProfit < 0) ? 'Total Loss' : 'Total Profit';
+        rows.push(['---', '---', '---', '---']); 
+        rows.push([totalLabel, String(totalProfit.toFixed(2)), data.currency, '']);
+        
+        const csv=rows.map(r=>r.join(',')).join('\n');
+        const blob=new Blob([csv],{type:'text/csv'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_${viewYear}_${String(viewMonth+1).padStart(2,'0')}_${data.currency}.csv`; a.click(); URL.revokeObjectURL(url);
+    });
+
+    if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
+    
+    renderWeekdayHeader(); 
+});
+</script>
+</body>
+</html>
