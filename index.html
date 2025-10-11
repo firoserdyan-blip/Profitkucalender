@@ -7,6 +7,9 @@
 <title>ProfitKu - Profit Calendar</title>
 
 <link rel="icon" type="image/png" href="/ProfitKu-Calender/logo.png" />
+
+<link rel="manifest" href="/ProfitKu-Calender/manifest.json">
+
 <meta property="og:url" content="https://firoserdyan-blip.github.io/ProfitKu-Calender/" /> 
 
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
@@ -450,10 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return loadedData;
         } catch (error) {
             console.error("Error loading data from Firebase:", error);
-            return {entries:{}, currency: 'USD'};
+            return {entries:{}, currency: 'USD'}; 
         }
     }
-    
+
     async function saveData(uid){ 
         if (!uid) return;
         try {
@@ -472,18 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error saving data to Firebase:", error);
             alert("Gagal menyimpan data ke cloud.");
         }
-    }
-
-    async function showApp(user){
-        if (loginCard) loginCard.style.display = 'none';
-        if (app) app.style.display = 'block';
-        
-        currentUserId = user.uid;
-        if (acctEmail) acctEmail.textContent = user.email;
-      
-        data = await loadData(user.uid);
-        if(currencySelect) currencySelect.value = data.currency; 
-        renderCalendar();
     }
 
     function formatCurrency(amount, currencyCode) {
@@ -550,14 +541,14 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme(newTheme);
         });
     }
-    
+
     function renderWeekdayHeader() {
         const weekdayHeader = document.getElementById('weekdayHeader');
         if (!weekdayHeader) return;
         weekdayHeader.innerHTML = ''; 
 
-        const userLocale = navigator.language || navigator.userLanguage || 'en-US'; 
-        const formatter = new Intl.DateTimeFormat(userLocale, { weekday: 'long' });
+        const userLocale = navigator.language || navigator.userLanguage || 'id-ID'; 
+        const formatter = new Intl.DateTimeFormat(userLocale, { weekday: 'short' });
 
         const today = new Date();
         const startDay = today.getDate() - today.getDay(); 
@@ -567,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let dayName = formatter.format(date);
             
             const dayDiv = document.createElement('div');
-            dayDiv.className = 'muted small';
+            dayDiv.className = 'day muted small';
             dayDiv.textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
             weekdayHeader.appendChild(dayDiv);
         }
@@ -575,7 +566,122 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('monthLabel').textContent = new Date(viewYear,viewMonth,1).toLocaleString(userLocale, {month:'long'})+' '+viewYear;
     }
 
+    function renderCalendar(){
+      const grid = document.getElementById('calendarGrid'); 
+      if(!grid) return; 
+
+      grid.innerHTML='';
+      renderWeekdayHeader(); 
+
+      const firstDay = new Date(viewYear,viewMonth,1).getDay();
+      const daysInMonth = new Date(viewYear,viewMonth+1,0).getDate();
+      for(let i=0;i<firstDay;i++){
+        const emptyCell = document.createElement('div');
+        emptyCell.className='day'; grid.appendChild(emptyCell);
+      }
+      for(let d=1;d<=daysInMonth;d++){
+        const ymd = formatYMD(viewYear,viewMonth,d);
+        // AMBIL DATA DARI STRUKTUR BARU
+        const entry = data.entries[ymd] || { amount: 0, note: '' };
+        const amt = entry.amount;
+        const note = entry.note;
+        
+        const cell = document.createElement('div'); 
+        cell.className='day card-item';
+        
+        if(ymd===formatYMD(today.getFullYear(),today.getMonth(),today.getDate())) cell.classList.add('today');
+        
+        const amountDisplay = formatCurrency(amt, data.currency); 
+        const lossClass = amt < 0 ? ' loss' : (amt > 0 ? ' profit' : '');
+        
+        // TAMBAHKAN INDIKATOR CATATAN
+        let noteIndicator = note.trim() !== '' ? '<span class="note-indicator">📝</span>' : '';
+
+        cell.innerHTML=`
+            <div class="date">${d}</div>
+            ${noteIndicator}
+            <div class="amount${lossClass}" data-date="${ymd}">${amountDisplay}</div>
+        `;
+        
+        cell.addEventListener('click',()=> openEditor(ymd,amt, note));
+        grid.appendChild(cell);
+      }
+      updateSummary();
+    }
     
+    function openEditor(ymd, amt, note) {
+      if (!editorModal) return;
+      editingYMD = ymd;
+      editorTitle.textContent = `Edit Data ${ymd} (${data.currency})`; 
+      editorAmtInput.value = amt === 0 ? '' : String(amt); 
+      editorNoteInput.value = note || ''; 
+      editorModal.style.display = 'flex'; 
+      editorAmtInput.focus();
+    }
+    
+    function closeEditor() {
+      if (editorModal) editorModal.style.display = 'none'; 
+      editingYMD = null;
+    }
+
+    function updateSummary(){
+        const monthTotalEl = document.getElementById('monthTotal');
+        const avgDayEl = document.getElementById('avgDay');
+        const daysCountEl = document.getElementById('daysCount');
+        
+        if (!monthTotalEl || !avgDayEl || !daysCountEl || !quickAmt) return;
+        
+        const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
+        let total=0,count=0;
+        
+        // LOOP PADA STRUKTUR DATA BARU
+        for(const k in data.entries){ 
+            if(k.startsWith(monthKeyPrefix)){ 
+                const entry = data.entries[k];
+                const amount = Number(entry.amount || 0); 
+                total += amount; 
+                if(amount !== 0 || entry.note.trim() !== '') count++; 
+            }
+        }
+        
+        const totalDisplay = formatCurrency(total, data.currency);
+        monthTotalEl.innerHTML = totalDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
+        
+        monthTotalEl.classList.remove('loss', 'profit');
+        if (total < 0) {
+            monthTotalEl.classList.add('loss'); 
+        } else if (total > 0) {
+            monthTotalEl.classList.add('profit');
+        }
+        
+        const avgDay = count ? (total / count) : 0;
+        const avgDisplay = formatCurrency(avgDay, data.currency);
+        avgDayEl.innerHTML = avgDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
+        
+        avgDayEl.classList.remove('loss', 'profit');
+        if (avgDay < 0) {
+            avgDayEl.classList.add('loss');
+        } else if (avgDay > 0) {
+            avgDayEl.classList.add('profit');
+        }
+        
+        daysCountEl.textContent = count;
+        quickAmt.placeholder = `Profit ${data.currency} (boleh negatif)`;
+    }
+    
+    // --- AUTENTIKASI ---
+    async function showApp(user){
+        if (loginCard) loginCard.style.display = 'none';
+        if (app) app.style.display = 'block';
+        
+        currentUserId = user.uid;
+        if (acctEmail) acctEmail.textContent = user.email;
+      
+        data = await loadData(user.uid);
+        if(currencySelect) currencySelect.value = data.currency; 
+        renderCalendar();
+    }
+
     const togglePasswordBtn = document.getElementById('togglePassword'); 
     if (togglePasswordBtn) {
         togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
@@ -622,79 +728,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    if(currencySelect) currencySelect.addEventListener('change', async (e) => {
-        data.currency = e.target.value;
-        if (currentUserId) {
-            await saveData(currentUserId); 
-        }
-        renderCalendar();
+    // --- NAVIGASI DAN QUICK SAVE ---
+    const prevBtn = document.getElementById('prev');
+    if(prevBtn) prevBtn.addEventListener('click',()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
+    
+    const nextBtn = document.getElementById('next');
+    if(nextBtn) nextBtn.addEventListener('click',()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
+    
+    const todayBtn = document.getElementById('todayBtn');
+    if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
+
+    const quickSave = document.getElementById('quickSave');
+    if(quickSave) quickSave.addEventListener('click', async ()=>{
+      if(!currentUserId) return alert('Silakan login terlebih dahulu!'); 
+      if(!quickDate) return; 
+      const d = quickDate.value;
+      const a = quickAmt.value;
+      if(!d){ alert('Pilih tanggal'); return; }
+      const num = Number(a); 
+      if(isNaN(num)){ alert('Masukkan angka profit yang valid!'); return; }
+      
+      data.entries[d] = { amount: Number(num.toFixed(2)), note: '' }; 
+      
+      await saveData(currentUserId); 
+      renderCalendar();
+      quickAmt.value='';
     });
-
-    function renderCalendar(){
-      const grid = document.getElementById('calendarGrid'); 
-      if(!grid) return; 
-
-      grid.innerHTML='';
-      renderWeekdayHeader(); 
-
-      const firstDay = new Date(viewYear,viewMonth,1).getDay();
-      const daysInMonth = new Date(viewYear,viewMonth+1,0).getDate();
-      for(let i=0;i<firstDay;i++){
-        const emptyCell = document.createElement('div');
-        emptyCell.className='day'; grid.appendChild(emptyCell);
-      }
-      for(let d=1;d<=daysInMonth;d++){
-        const ymd = formatYMD(viewYear,viewMonth,d);
-        // AMBIL DATA DARI STRUKTUR BARU
-        const entry = data.entries[ymd] || { amount: 0, note: '' };
-        const amt = entry.amount;
-        const note = entry.note;
-        
-        const cell = document.createElement('div'); 
-        cell.className='day card-item';
-        
-        if(ymd===formatYMD(today.getFullYear(),today.getMonth(),today.getDate())) cell.classList.add('today');
-        
-        const amountDisplay = formatCurrency(amt, data.currency); 
-        const lossClass = amt < 0 ? ' loss' : (amt > 0 ? ' profit' : '');
-        
-        // TAMBAHKAN INDIKATOR CATATAN
-        let noteIndicator = note.trim() !== '' ? '<span class="note-indicator">📝</span>' : '';
-
-        cell.innerHTML=`
-            <div class="date">${d}</div>
-            ${noteIndicator}
-            <div class="amount${lossClass}" data-date="${ymd}">${amountDisplay}</div>
-        `;
-        
-        cell.addEventListener('click',()=> openEditor(ymd,amt, note));
-        grid.appendChild(cell);
-      }
-      updateSummary();
-    }
     
-    // FUNGSI openEditor DIPERBARUI UNTUK MENAMPILKAN CATATAN
-    function openEditor(ymd, amt, note) {
-      if (!editorModal) return;
-      editingYMD = ymd;
-      editorTitle.textContent = `Edit Data ${ymd} (${data.currency})`; // Judul modal diperbarui
-      editorAmtInput.value = amt === 0 ? '' : String(amt); 
-      editorNoteInput.value = note || ''; // Isi input catatan
-      editorModal.style.display = 'flex'; 
-      editorAmtInput.focus();
-    }
-    
-    function closeEditor() {
-      if (editorModal) editorModal.style.display = 'none'; 
-      editingYMD = null;
-    }
-    
-    // FUNGSI saveEditorBtn DIPERBARUI UNTUK MENYIMPAN CATATAN
+    // --- EDITOR MODAL HANDLERS ---
     const saveEditorBtn = document.getElementById('saveEditorBtn');
     if(saveEditorBtn) saveEditorBtn.addEventListener('click', async () => {
       if (!editingYMD || !currentUserId) return; 
       const n = editorAmtInput.value.trim();
-      const noteText = editorNoteInput.value.trim(); // Ambil nilai catatan
+      const noteText = editorNoteInput.value.trim(); 
       
       const num = Number(n === '' ? '0' : n);
       if (isNaN(num)) {
@@ -705,10 +771,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const roundedNum = Number(num.toFixed(2));
       
       if (roundedNum === 0 && noteText === '') {
-          // Jika keduanya kosong/nol, hapus data untuk menghemat ruang
           delete data.entries[editingYMD];
       } else {
-          // Simpan data dalam struktur objek baru
           data.entries[editingYMD] = { amount: roundedNum, note: noteText };
       }
       
@@ -731,89 +795,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    function updateSummary(){
-        const monthTotalEl = document.getElementById('monthTotal');
-        const avgDayEl = document.getElementById('avgDay');
-        const daysCountEl = document.getElementById('daysCount');
-        
-        if (!monthTotalEl || !avgDayEl || !daysCountEl || !quickAmt) return;
-        
-        const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
-        let total=0,count=0;
-        
-        // LOOP PADA STRUKTUR DATA BARU
-        for(const k in data.entries){ 
-            if(k.startsWith(monthKeyPrefix)){ 
-                const entry = data.entries[k];
-                const amount = Number(entry.amount || 0); // Pastikan mengambil properti amount
-                total += amount; 
-                if(amount !== 0 || entry.note.trim() !== '') count++; // Hitung hari jika ada profit/loss atau catatan
-            }
+    // --- CURRENCY CHANGE ---
+    if(currencySelect) currencySelect.addEventListener('change', async (e) => {
+        data.currency = e.target.value;
+        if (currentUserId) {
+            await saveData(currentUserId); 
         }
-        
-        const totalDisplay = formatCurrency(total, data.currency);
-        monthTotalEl.innerHTML = totalDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
-        
-        monthTotalEl.classList.remove('loss', 'profit');
-        if (total < 0) {
-            monthTotalEl.classList.add('loss'); 
-        } else if (total > 0) {
-            monthTotalEl.classList.add('profit');
-        }
-        
-        const avgDay = count ? (total / count) : 0;
-        const avgDisplay = formatCurrency(avgDay, data.currency);
-        avgDayEl.innerHTML = avgDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
-        
-        avgDayEl.classList.remove('loss', 'profit');
-        if (avgDay < 0) {
-            avgDayEl.classList.add('loss');
-        } else if (avgDay > 0) {
-            avgDayEl.classList.add('profit');
-        }
-        
-        daysCountEl.textContent = count;
-        quickAmt.placeholder = `Profit ${data.currency} (boleh negatif)`;
-    }
-
-    const prevBtn = document.getElementById('prev');
-    if(prevBtn) prevBtn.addEventListener('click',()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
-    
-    const nextBtn = document.getElementById('next');
-    if(nextBtn) nextBtn.addEventListener('click',()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
-    
-    const todayBtn = document.getElementById('todayBtn');
-    if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
-
-    const quickSave = document.getElementById('quickSave');
-    if(quickSave) quickSave.addEventListener('click', async ()=>{
-      if(!currentUserId) return alert('Silakan login terlebih dahulu!'); 
-      if(!quickDate) return; 
-      const d = quickDate.value;
-      const a = quickAmt.value;
-      if(!d){ alert('Pilih tanggal'); return; }
-      const num = Number(a); 
-      if(isNaN(num)){ alert('Masukkan angka profit yang valid!'); return; }
-      
-      // Simpan data cepat HANYA untuk amount, catatan kosong
-      data.entries[d] = { amount: Number(num.toFixed(2)), note: '' }; 
-      
-      await saveData(currentUserId); 
-      renderCalendar();
-      quickAmt.value='';
+        renderCalendar();
     });
 
+    // --- EXPORT CSV ---
     const exportCsv = document.getElementById('exportCsv');
     if(exportCsv) exportCsv.addEventListener('click', ()=>{
-        // HEADER CSV DIPERBARUI
         const rows=[['date','profit_amount', 'currency', 'note']]; 
         let totalProfit = 0; 
         
-        // LOOP PADA STRUKTUR DATA BARU
         for(const k of Object.keys(data.entries).sort()) {
             const entry = data.entries[k];
             const amount = entry.amount || 0;
-            const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); // Ganti koma dengan titik koma agar tidak merusak CSV
+            const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); 
             rows.push([k, String(amount), data.currency, note]);
             totalProfit += amount;
         }
