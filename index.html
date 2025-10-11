@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ProfitKu - Profit Calendar</title>
+<title>ProfitKu - Profit Calendar</title> 
 
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
@@ -64,12 +64,12 @@ h1{margin-top:0;text-align:center;color:var(--text);}
 
 /* --- CSS TAMBAHAN UNTUK LOGO DI HEADER UTAMA --- */
 .header-logo-group {
-    display: flex; /* Untuk menyejajarkan logo dan teks secara horizontal */
-    align-items: center; /* Pusatkan vertikal */
-    gap: 10px; /* Jarak antara logo dan teks */
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
 }
 .header-logo-img {
-    width: 36px; /* Ukuran logo di header */
+    width: 36px; 
     height: 36px;
     border-radius: 6px; 
     flex-shrink: 0; 
@@ -77,7 +77,7 @@ h1{margin-top:0;text-align:center;color:var(--text);}
 .header-logo-group h1 {
     margin: 0; 
     text-align: left; 
-    font-size: 24px; /* Atur ukuran h1 agar tidak terlalu besar di header */
+    font-size: 24px; 
 }
 /* ------------------------------------------------ */
 
@@ -266,7 +266,7 @@ textarea {
 <body>
 <div class="card" id="loginCard">
     <div class="logo-container">
-        <img src="logo.png" alt="Logo ProfitKu" /> 
+        <img src="/profit-calender/logo.png" alt="Logo ProfitKu" /> 
         <h2>Login/Register</h2>
     </div>
     <input type="email" id="email" placeholder="Email" />
@@ -282,7 +282,7 @@ textarea {
 <div class="wrap" id="app">
     <header>
         <div class="header-logo-group">
-            <img src="logo.png" alt="ProfitKu" class="header-logo-img" /> 
+            <img src="/profit-calender/logo.png" alt="ProfitKu" class="header-logo-img" /> 
             <div>
                 <h1>Profit Calendar</h1>
                 <div class="muted small">Catat profit harian — data aman dan pribadi di CLOUD</div>
@@ -670,7 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSummary();
     }
     
-    // FUNGSI openEditor DIPERBARUI UNTUK MENAMPILKAN CATATAN
+    // FUNGSI openEditor DIPERBARUI UNTUK MENAMPILkan CATATAN
     function openEditor(ymd, amt, note) {
       if (!editorModal) return;
       editingYMD = ymd;
@@ -689,145 +689,105 @@ document.addEventListener('DOMContentLoaded', () => {
     // FUNGSI saveEditorBtn DIPERBARUI UNTUK MENYIMPAN CATATAN
     const saveEditorBtn = document.getElementById('saveEditorBtn');
     if(saveEditorBtn) saveEditorBtn.addEventListener('click', async () => {
-      if (!editingYMD || !currentUserId) return; 
-      const n = editorAmtInput.value.trim();
-      const noteText = editorNoteInput.value.trim(); // Ambil nilai catatan
-      
-      const num = Number(n === '' ? '0' : n);
-      if (isNaN(num)) {
-          alert('Masukkan angka profit yang valid!');
-          return;
-      }
-      
-      const roundedNum = Number(num.toFixed(2));
-      
-      if (roundedNum === 0 && noteText === '') {
-          // Jika keduanya kosong/nol, hapus data untuk menghemat ruang
-          delete data.entries[editingYMD];
-      } else {
-          // Simpan data dalam struktur objek baru
-          data.entries[editingYMD] = { amount: roundedNum, note: noteText };
-      }
-      
-      closeEditor();
-      await saveData(currentUserId); 
-      renderCalendar();
+        const amt = parseFloat(editorAmtInput.value || 0);
+        const note = editorNoteInput.value.trim(); 
+        
+        if (editingYMD && currentUserId) {
+            data.entries[editingYMD] = { amount: amt, note: note }; 
+            await saveData(currentUserId);
+            renderCalendar();
+            closeEditor();
+        }
     });
 
     const closeEditorBtn = document.getElementById('closeEditorBtn');
     if(closeEditorBtn) closeEditorBtn.addEventListener('click', closeEditor);
-    
+
     const deleteEditorBtn = document.getElementById('deleteEditorBtn');
     if(deleteEditorBtn) deleteEditorBtn.addEventListener('click', async () => {
-      if(!currentUserId) return; 
-      if(confirm(`Yakin hapus data hari ${editingYMD}? (Profit & Catatan)`)){
-          delete data.entries[editingYMD];
-          closeEditor();
+        if (editingYMD && currentUserId && confirm(`Yakin hapus data untuk ${editingYMD}?`)) {
+            if (data.entries[editingYMD]) {
+                delete data.entries[editingYMD]; 
+                await saveData(currentUserId);
+                renderCalendar();
+                closeEditor();
+            }
+        }
+    });
+
+    const prevBtn = document.getElementById('prev');
+    if(prevBtn) prevBtn.addEventListener('click',()=>{
+      viewMonth--; if(viewMonth<0){ viewMonth=11; viewYear--; } renderCalendar();
+    });
+    const nextBtn = document.getElementById('next');
+    if(nextBtn) nextBtn.addEventListener('click',()=>{
+      viewMonth++; if(viewMonth>11){ viewMonth=0; viewYear++; } renderCalendar();
+    });
+
+    const todayBtn = document.getElementById('todayBtn');
+    if(todayBtn) todayBtn.addEventListener('click',()=>{
+      viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar();
+    });
+
+    // FUNGSI updateSummary DIPERBARUI
+    function updateSummary(){
+      let monthTotal=0; let daysCount=0;
+      const monthStart = formatYMD(viewYear, viewMonth, 1);
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      
+      for(let d=1; d<=daysInMonth; d++){
+        const ymd = formatYMD(viewYear, viewMonth, d);
+        const entry = data.entries[ymd]; 
+        if(entry && entry.amount !== 0){
+          monthTotal += entry.amount;
+          daysCount++;
+        }
+      }
+
+      const avgDay = daysCount > 0 ? monthTotal / daysCount : 0;
+      
+      const monthTotalDisplay = document.getElementById('monthTotal');
+      const avgDayDisplay = document.getElementById('avgDay');
+      const daysCountDisplay = document.getElementById('daysCount');
+      
+      if(monthTotalDisplay) {
+        monthTotalDisplay.innerHTML = formatCurrency(monthTotal, data.currency);
+        monthTotalDisplay.className = 'value-display' + (monthTotal < 0 ? ' loss' : (monthTotal > 0 ? ' profit' : ''));
+      }
+      if(avgDayDisplay) {
+        avgDayDisplay.innerHTML = formatCurrency(avgDay, data.currency);
+        avgDayDisplay.className = 'value-display' + (avgDay < 0 ? ' loss' : (avgDay > 0 ? ' profit' : ''));
+      }
+      if(daysCountDisplay) daysCountDisplay.textContent = daysCount;
+    }
+
+    // Quick Save
+    const quickSaveBtn = document.getElementById('quickSave');
+    if(quickSaveBtn) quickSaveBtn.addEventListener('click', async () => {
+      const ymd = quickDate.value;
+      const amt = parseFloat(quickAmt.value || 0);
+      
+      if (ymd && currentUserId) {
+          // Cari catatan lama jika ada, jika tidak, pakai string kosong
+          const existingNote = (data.entries[ymd] && data.entries[ymd].note) ? data.entries[ymd].note : ''; 
+
+          data.entries[ymd] = { amount: amt, note: existingNote };
+          
           await saveData(currentUserId); 
+          
+          // Setelah save, pastikan kalender me-render bulan yang sedang di-edit
+          const d = new Date(ymd);
+          viewYear = d.getFullYear();
+          viewMonth = d.getMonth();
           renderCalendar();
+          quickAmt.value=''; 
+      } else {
+          alert("Pilih tanggal dan pastikan Anda sudah login.");
       }
     });
 
-    function updateSummary(){
-        const monthTotalEl = document.getElementById('monthTotal');
-        const avgDayEl = document.getElementById('avgDay');
-        const daysCountEl = document.getElementById('daysCount');
-        
-        if (!monthTotalEl || !avgDayEl || !daysCountEl || !quickAmt) return;
-        
-        const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
-        let total=0,count=0;
-        
-        // LOOP PADA STRUKTUR DATA BARU
-        for(const k in data.entries){ 
-            if(k.startsWith(monthKeyPrefix)){ 
-                const entry = data.entries[k];
-                const amount = Number(entry.amount || 0); // Pastikan mengambil properti amount
-                total += amount; 
-                if(amount !== 0 || entry.note.trim() !== '') count++; // Hitung hari jika ada profit/loss atau catatan
-            }
-        }
-        
-        const totalDisplay = formatCurrency(total, data.currency);
-        monthTotalEl.innerHTML = totalDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
-        
-        monthTotalEl.classList.remove('loss', 'profit');
-        if (total < 0) {
-            monthTotalEl.classList.add('loss'); 
-        } else if (total > 0) {
-            monthTotalEl.classList.add('profit');
-        }
-        
-        const avgDay = count ? (total / count) : 0;
-        const avgDisplay = formatCurrency(avgDay, data.currency);
-        avgDayEl.innerHTML = avgDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
-        
-        avgDayEl.classList.remove('loss', 'profit');
-        if (avgDay < 0) {
-            avgDayEl.classList.add('loss');
-        } else if (avgDay > 0) {
-            avgDayEl.classList.add('profit');
-        }
-        
-        daysCountEl.textContent = count;
-        quickAmt.placeholder = `Profit ${data.currency} (boleh negatif)`;
-    }
-
-    const prevBtn = document.getElementById('prev');
-    if(prevBtn) prevBtn.addEventListener('click',()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
-    
-    const nextBtn = document.getElementById('next');
-    if(nextBtn) nextBtn.addEventListener('click',()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
-    
-    const todayBtn = document.getElementById('todayBtn');
-    if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
-
-    const quickSave = document.getElementById('quickSave');
-    if(quickSave) quickSave.addEventListener('click', async ()=>{
-      if(!currentUserId) return alert('Silakan login terlebih dahulu!'); 
-      if(!quickDate) return; 
-      const d = quickDate.value;
-      const a = quickAmt.value;
-      if(!d){ alert('Pilih tanggal'); return; }
-      const num = Number(a); 
-      if(isNaN(num)){ alert('Masukkan angka profit yang valid!'); return; }
-      
-      // Simpan data cepat HANYA untuk amount, catatan kosong
-      data.entries[d] = { amount: Number(num.toFixed(2)), note: '' }; 
-      
-      await saveData(currentUserId); 
-      renderCalendar();
-      quickAmt.value='';
-    });
-
     const exportCsv = document.getElementById('exportCsv');
-    if(exportCsv) exportCsv.addEventListener('click', ()=>{
-        // HEADER CSV DIPERBARUI
-        const rows=[['date','profit_amount', 'currency', 'note']]; 
-        let totalProfit = 0; 
-        
-        // LOOP PADA STRUKTUR DATA BARU
-        for(const k of Object.keys(data.entries).sort()) {
-            const entry = data.entries[k];
-            const amount = entry.amount || 0;
-            const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); // Ganti koma dengan titik koma agar tidak merusak CSV
-            rows.push([k, String(amount), data.currency, note]);
-            totalProfit += amount;
-        }
-        const totalLabel = (totalProfit < 0) ? 'Total Loss' : 'Total Profit';
-        rows.push(['---', '---', '---', '---']); 
-        rows.push([totalLabel, String(totalProfit.toFixed(2)), data.currency, '']);
-        
-        const csv=rows.map(r=>r.join(',')).join('\n');
-        const blob=new Blob([csv],{type:'text/csv'});
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_${viewYear}_${String(viewMonth+1).padStart(2,'0')}_${data.currency}.csv`; a.click(); URL.revokeObjectURL(url);
-    });
-
-    if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
-    
-    renderWeekdayHeader(); 
-});
+    if(exportCsv) exportCsv.addEventListener('click', ()=>{\n        const currentCurrency = data.currency; \n        // HEADER CSV DIPERBARUI\n        const rows=[['date','profit_amount', 'currency', 'note']]; \n        let totalProfit = 0; \n        \n        // Filter data untuk bulan yang sedang dilihat\n        const currentMonthEntries = Object.entries(data.entries).filter(([ymd]) => {\n            const entryDate = new Date(ymd);\n            return entryDate.getFullYear() === viewYear && entryDate.getMonth() === viewMonth;\n        }).sort(([ymd1], [ymd2]) => ymd1.localeCompare(ymd2));\n\n        currentMonthEntries.forEach(([ymd, entry]) => {\n            const amount = entry.amount;\n            const note = entry.note;\n            rows.push([ymd, String(amount.toFixed(2)), currentCurrency, note.replace(/,/g, ';')]);\n            totalProfit += amount;\n        });\n\n        const totalLabel = (totalProfit < 0) ? 'Total Loss' : 'Total Profit';\n        rows.push(['---', '---', '---', '---']); \n        rows.push([totalLabel, String(totalProfit.toFixed(2)), data.currency, '']);\n        \n        const csv=rows.map(r=>r.join(',')).join('\\n');\n        const blob=new Blob([csv],{type:'text/csv'});\n        const url=URL.createObjectURL(blob);\n        const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_${viewYear}_${String(viewMonth+1).padStart(2,'0')}_${data.currency}.csv`; a.click(); URL.revokeObjectURL(url);\n    });\n\n    if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());\n    \n    renderWeekdayHeader(); \n    \n    // Google Analytics (Jika Anda punya)\n    // Tambahkan script GA Anda di sini jika diperlukan\n\n}); // Akhir DOMContentLoaded
 </script>
 </body>
 </html>
