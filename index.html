@@ -44,6 +44,25 @@ body{margin:0;background:var(--bg);color:var(--text);display:flex;align-items:ce
 .card{background:var(--card);padding:20px;border-radius:12px;box-shadow:var(--shadow);width:100%;max-width:400px;transition:background 0.3s, box-shadow 0.3s;}
 h1{margin-top:0;text-align:center;color:var(--text);}
 
+/* --- CSS TAMBAHAN UNTUK LOGO DI HALAMAN LOGIN --- */
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.logo-container img {
+    max-width: 100px; /* Ukuran maksimal logo */
+    height: auto;
+    display: block;
+    margin: 0 auto 10px; /* Jarak bawah logo */
+}
+.logo-container h2 {
+    font-size: 1.5em; /* Ukuran teks di bawah logo */
+    color: var(--accent);
+    margin: 0;
+}
+/* ------------------------------------------------ */
+
+
 input[type="email"]{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid var(--input-border);box-sizing: border-box;background:var(--input-bg);color:var(--text);}
 
 .password-container{position: relative;margin-top: 10px;}
@@ -212,7 +231,10 @@ textarea {
 </head>
 <body>
 <div class="card" id="loginCard">
-    <h1>Login/Register</h1>
+    <div class="logo-container">
+        <img src="logo.png" alt="Logo ProfitKu" /> 
+        <h2>Login/Register</h2>
+    </div>
     <input type="email" id="email" placeholder="Email" />
     
     <div class="password-container">
