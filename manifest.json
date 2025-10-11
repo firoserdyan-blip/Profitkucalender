@@ -1,0 +1,15 @@
+{
+  "name": "ProfitKu - Calendar",
+  "short_name": "ProfitKu",
+  "start_url": "/ProfitKu-Calender/index.html",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/ProfitKu-Calender/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
