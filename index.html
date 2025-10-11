@@ -50,15 +50,34 @@ h1{margin-top:0;text-align:center;color:var(--text);}
     margin-bottom: 20px;
 }
 .logo-container img {
-    max-width: 100px; /* Ukuran maksimal logo */
+    max-width: 100px; 
     height: auto;
     display: block;
-    margin: 0 auto 10px; /* Jarak bawah logo */
+    margin: 0 auto 10px; 
 }
 .logo-container h2 {
-    font-size: 1.5em; /* Ukuran teks di bawah logo */
+    font-size: 1.5em; 
     color: var(--accent);
     margin: 0;
+}
+/* ------------------------------------------------ */
+
+/* --- CSS TAMBAHAN UNTUK LOGO DI HEADER UTAMA --- */
+.header-logo-group {
+    display: flex; /* Untuk menyejajarkan logo dan teks secara horizontal */
+    align-items: center; /* Pusatkan vertikal */
+    gap: 10px; /* Jarak antara logo dan teks */
+}
+.header-logo-img {
+    width: 36px; /* Ukuran logo di header */
+    height: 36px;
+    border-radius: 6px; 
+    flex-shrink: 0; 
+}
+.header-logo-group h1 {
+    margin: 0; 
+    text-align: left; 
+    font-size: 24px; /* Atur ukuran h1 agar tidak terlalu besar di header */
 }
 /* ------------------------------------------------ */
 
@@ -201,8 +220,23 @@ textarea {
 @media (max-width: 500px){
     .calendar {margin-left: 0; right: 0; width: 100%;padding: 0 0;}
     .day {min-height: 50px;}
-    header {flex-direction: column; align-items: flex-start;}
-    .controls {width: 100%; justify-content: space-between;}
+    
+    /* Mengubah header agar logo dan controls tetap bersebelahan di mobile */
+    header {
+        flex-direction: row; 
+        align-items: center; 
+        justify-content: space-between;
+    }
+    
+    .header-logo-group h1 {
+        font-size: 20px;
+    }
+    .header-logo-img {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .controls {width: auto; justify-content: flex-end;}
     .summary {max-width: none;}
     .stat {min-width: 100%;}
     .quick-action-bar input, .quick-action-bar button, .quick-action-bar select {flex: 1 1 45%;}
@@ -247,9 +281,12 @@ textarea {
 </div>
 <div class="wrap" id="app">
     <header>
-        <div>
-            <h1>Profit Calendar</h1>
-            <div class="muted small">Catat profit harian — data aman dan pribadi di CLOUD</div>
+        <div class="header-logo-group">
+            <img src="logo.png" alt="ProfitKu" class="header-logo-img" /> 
+            <div>
+                <h1>Profit Calendar</h1>
+                <div class="muted small">Catat profit harian — data aman dan pribadi di CLOUD</div>
+            </div>
         </div>
         <div class="controls">
             <div class="card small">Current account: <strong id="acctEmail"></strong></div>
