@@ -84,7 +84,7 @@ body{margin:0;background:var(--bg);color:var(--text);display:flex;align-items:ce
     text-align: left; 
     font-size: 24px; 
 }
-h1{margin-top:0;text-align:center;color:var(--text);} /* Dikecilkan agar tidak bentrok */
+h1{margin-top:0;text-align:center;color:var(--text);} 
 /* ------------------------------------------------ */
 
 
@@ -120,8 +120,8 @@ header{display:flex;justify-content:space-between;align-items:center;flex-wrap:w
     background: var(--grid-bg);text-align: center;display: flex; 
     flex-direction: column;justify-content: center;align-items: center;font-size: 10px; 
     line-height: 1.1;cursor: pointer;overflow: hidden;white-space: normal;
+    position: relative;
     transition: background 0.3s;
-    position: relative; /* Ditambahkan untuk posisi indikator catatan */
 }
 [data-theme="dark"] .day {
     border: 1px solid rgba(255,255,255,0.08); 
@@ -157,7 +157,7 @@ header{display:flex;justify-content:space-between;align-items:center;flex-wrap:w
 .stat .value-display.profit {color: var(--green);} 
 
 .quick-action-bar{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;max-width:700px;}
-input[type=number], input[type=date], select{ 
+input[type=date], select, input[type=text]{ 
     width:auto;padding:8px;border-radius:6px;border:1px solid var(--input-border);flex:1;
     background:var(--input-bg);color:var(--text); transition: background 0.3s, color 0.3s, border-color 0.3s;
 }
@@ -173,7 +173,7 @@ input[type=number], input[type=date], select{
 }
 .btn{background:var(--accent);color:white;padding:8px 10px;border-radius:8px;border:0;cursor:pointer;white-space:nowrap; width: auto !important;}
 .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
-.btn.danger{background:#dc2626; color:white; padding:8px 10px; border-radius:8px; border:0; cursor:pointer;} /* Gaya Tombol Reset Data */
+.btn.danger{background:#dc2626; color:white; padding:8px 10px; border-radius:8px; border:0; cursor:pointer;} 
 
 #editorModal {
     position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); 
@@ -229,7 +229,6 @@ textarea {
     .calendar {margin-left: 0; right: 0; width: 100%;padding: 0 0;}
     .day {min-height: 50px;}
     
-    /* Mengubah header agar logo dan controls tetap bersebelahan di mobile */
     header {
         flex-direction: row; 
         align-items: center; 
@@ -252,7 +251,7 @@ textarea {
     
     .cal-header .actions {
         display: grid; 
-        grid-template-columns: 1fr 1fr; /* Mengubah menjadi 2 kolom */
+        grid-template-columns: 1fr 1fr; 
         width: 100%;
         gap: 8px; 
         margin-top: 8px; 
@@ -263,9 +262,8 @@ textarea {
         width: 100% !important; 
         box-sizing: border-box;
     }
-    /* Pastikan tombol Reset Data juga diatur dengan benar di grid */
     .cal-header .actions #resetDataBtn {
-        grid-column: span 2; /* Agar tombol Reset mengambil seluruh lebar baris */
+        grid-column: span 2; 
     }
     
     #weekdayHeader .muted.small {
@@ -327,7 +325,8 @@ textarea {
                 </select>
                 <button class="btn" id="todayBtn" style="margin-top:0;">Hari Ini</button>
                 <button class="btn export" id="exportCsv" style="margin-top:0;">Export CSV</button>
-                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red);">Reset Data</button> </div>
+                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red);">Reset Data</button>
+            </div>
             
         </div>
         
@@ -352,7 +351,7 @@ textarea {
         
         <div class="quick-action-bar">
             <input type="date" id="quickDate" />
-            <input type="number" step="0.01" id="quickAmt" placeholder="Profit (boleh negatif)" />
+            <input type="text" id="quickAmt" inputmode="decimal" placeholder="Profit (boleh negatif, cth: 500.000 atau 10,50)" /> 
             <button class="btn" id="quickSave">Simpan</button>
         </div>
         
@@ -366,7 +365,7 @@ textarea {
         
         <div style="margin-bottom: 15px;">
             <div class="muted small" style="margin-bottom: 5px;">Jumlah Profit / Loss:</div>
-            <input type="number" step="0.01" id="editorAmt" placeholder="Profit (e.g., 10000.00)" style="width: 100%;">
+            <input type="text" id="editorAmt" inputmode="decimal" placeholder="Profit (cth: 500.000 atau 10,50)" style="width: 100%;">
         </div>
         
         <div style="margin-bottom: 15px;">
@@ -405,10 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const CURRENCY_SYMBOLS = {
         'USD': '$', 'IDR': 'Rp', 'EUR': '€', 'JPY': '¥', 'BTC': '₿',
     };
-
-    let currentUserId = null; 
     
-    // STRUKTUR DATA DIPERBARUI: { entries: { '2025-10-01': { amount: 55.00, note: '...' }, ... } }
+    let currentUserId = null; 
     let data = { entries: {}, currency: 'USD' }; 
     
     const html = document.documentElement; 
@@ -427,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('themeToggle');
     const themeLabel = document.getElementById('themeLabel');
     const themeIcon = themeToggle ? themeToggle.querySelector('.icon') : null;
-    const resetDataBtn = document.getElementById('resetDataBtn'); // Tombol Baru
+    const resetDataBtn = document.getElementById('resetDataBtn');
 
     let editingYMD = null; 
     const today = new Date();
@@ -450,10 +447,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const loadedData = snapshot.val() || {entries:{}, currency: 'USD'}; 
             if (!loadedData.currency) { loadedData.currency = 'USD'; }
             
-            // Konversi data lama (hanya angka) ke format objek baru jika ada
             for (const key in loadedData.entries) {
                 if (typeof loadedData.entries[key] === 'number') {
-                    loadedData.entries[key] = { amount: loadedData.entries[key], note: '' };
+                    loadedData.entries[key] = { amount: loadedData.entries[key], note: '' }; 
                 }
             }
             
@@ -467,13 +463,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveData(uid){ 
         if (!uid) return;
         try {
-            // Pastikan kita menyimpan data dalam struktur baru (objek)
             const entriesToSave = {};
             for (const ymd in data.entries) {
                 const entry = data.entries[ymd];
-                // Hapus entry jika jumlahnya 0 dan catatan kosong
-                if (entry.amount !== 0 || entry.note.trim() !== '') {
-                     entriesToSave[ymd] = entry;
+                const amount = Number(entry.amount); 
+                
+                if (amount !== 0 || entry.note.trim() !== '') {
+                     entriesToSave[ymd] = { amount: amount, note: entry.note };
                 }
             }
             data.entries = entriesToSave;
@@ -484,26 +480,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // FUNGSI BARU: RESET DATA
     async function resetAllData(uid) {
         if (!uid) return alert('Silakan login terlebih dahulu!');
         
-        // Peringatan Pertama
         const confirm1 = confirm("PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda dari cloud (Firebase). Data tidak dapat dikembalikan.\n\nApakah Anda YAKIN ingin melanjutkan?");
         
         if (!confirm1) {
             return; 
         }
 
-        // Peringatan Kedua
         const confirm2 = confirm("PERINGATAN AKHIR! Semua data Profit Calendar Anda akan hilang PERMANEN. Pastikan Anda sudah meng-Export CSV.\n\nTekan OK untuk menghapus SEMUA DATA.");
 
         if (confirm2) {
             try {
-                // Hapus data pengguna di Firebase
                 await database.ref(getDbPath(uid)).remove();
                 
-                // Reset data di aplikasi lokal
                 data = { entries: {}, currency: data.currency || 'USD' }; 
                 
                 alert("Data berhasil direset. Semua data profit/loss Anda telah dihapus dari cloud.");
@@ -521,9 +512,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const isProfit = amount > 0;
         
         let displayAmount;
-        if (currencyCode === 'IDR' && Math.abs(amount) >= 10000) {
-            displayAmount = Math.abs(amount).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        
+        if (currencyCode === 'IDR') {
+            // Untuk IDR, gunakan locale Indonesia dan TIDAK PERLU 2 desimal jika angka bulat
+             const decimalOptions = { minimumFractionDigits: 0, maximumFractionDigits: 2 };
+             // Menggunakan 'id-ID' memastikan format ribuan pakai titik dan desimal pakai koma
+             displayAmount = Math.abs(amount).toLocaleString('id-ID', decimalOptions); 
         } else {
+            // Untuk mata uang lain (USD, EUR, BTC), paksakan 2 desimal (menggunakan toFixed)
             displayAmount = Math.abs(amount).toFixed(2);
         }
         
@@ -619,7 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       for(let d=1;d<=daysInMonth;d++){
         const ymd = formatYMD(viewYear,viewMonth,d);
-        // AMBIL DATA DARI STRUKTUR BARU
         const entry = data.entries[ymd] || { amount: 0, note: '' };
         const amt = entry.amount;
         const note = entry.note;
@@ -632,7 +627,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const amountDisplay = formatCurrency(amt, data.currency); 
         const lossClass = amt < 0 ? ' loss' : (amt > 0 ? ' profit' : '');
         
-        // TAMBAHKAN INDIKATOR CATATAN
         let noteIndicator = note.trim() !== '' ? '<span class="note-indicator">📝</span>' : '';
 
         cell.innerHTML=`
@@ -651,6 +645,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!editorModal) return;
       editingYMD = ymd;
       editorTitle.textContent = `Edit Data ${ymd} (${data.currency})`; 
+      
+      // Tampilkan angka mentah yang disimpan
       editorAmtInput.value = amt === 0 ? '' : String(amt); 
       editorNoteInput.value = note || ''; 
       editorModal.style.display = 'flex'; 
@@ -660,6 +656,38 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeEditor() {
       if (editorModal) editorModal.style.display = 'none'; 
       editingYMD = null;
+    }
+    
+    // --- FUNGSI BARU: CLEAN & PARSE INPUT ANGKA (MENANGANI IDR) ---
+    function parseInput(inputString, currency) {
+        let cleanString = inputString.trim();
+
+        if (cleanString === '') {
+            return 0;
+        }
+
+        // Hapus semua karakter yang bukan angka, titik, koma, atau tanda minus
+        cleanString = cleanString.replace(/[^\d,\.\-]/g, '');
+
+        if (currency === 'IDR') {
+            // Logika IDR (titik = ribuan, koma = desimal)
+            // 1. Hapus SEMUA titik (pemisah ribuan)
+            cleanString = cleanString.replace(/\./g, '');
+            // 2. Ganti koma (,) dengan titik (.) (pemisah desimal standar JS)
+            cleanString = cleanString.replace(/,/g, '.');
+        } else {
+            // Logika Non-IDR (titik = desimal, koma = desimal atau diabaikan)
+            // Ganti koma (,) dengan titik (.) untuk desimal
+            cleanString = cleanString.replace(/,/g, '.');
+        }
+
+        // Ambil nilai numerik
+        const num = Number(cleanString);
+        
+        if (isNaN(num)) {
+            return null; // Mengembalikan null jika input tidak valid
+        }
+        return num;
     }
 
     function updateSummary(){
@@ -672,7 +700,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
         let total=0,count=0;
         
-        // LOOP PADA STRUKTUR DATA BARU
         for(const k in data.entries){ 
             if(k.startsWith(monthKeyPrefix)){ 
                 const entry = data.entries[k];
@@ -704,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         daysCountEl.textContent = count;
-        quickAmt.placeholder = `Profit ${data.currency} (boleh negatif)`;
+        quickAmt.placeholder = `Profit ${data.currency} (cth: 500.000 atau 10,50)`;
     }
     
     // --- AUTENTIKASI ---
@@ -783,10 +810,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const d = quickDate.value;
       const a = quickAmt.value;
       if(!d){ alert('Pilih tanggal'); return; }
-      const num = Number(a); 
-      if(isNaN(num)){ alert('Masukkan angka profit yang valid!'); return; }
       
-      data.entries[d] = { amount: Number(num.toFixed(2)), note: '' }; 
+      const num = parseInput(a, data.currency); // KIRIM CURRENCY
+      
+      if(num === null){ alert('Masukkan angka profit yang valid! (Contoh: 500.000 atau 10,50)'); return; }
+      
+      data.entries[d] = { amount: num, note: '' }; 
       
       await saveData(currentUserId); 
       renderCalendar();
@@ -800,18 +829,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const n = editorAmtInput.value.trim();
       const noteText = editorNoteInput.value.trim(); 
       
-      const num = Number(n === '' ? '0' : n);
-      if (isNaN(num)) {
-          alert('Masukkan angka profit yang valid!');
+      const num = parseInput(n, data.currency); // KIRIM CURRENCY
+
+      if (num === null) {
+          alert('Masukkan angka profit yang valid! (Contoh: 500.000 atau 10,50)');
           return;
       }
       
-      const roundedNum = Number(num.toFixed(2));
+      const finalNum = num; 
       
-      if (roundedNum === 0 && noteText === '') {
+      if (finalNum === 0 && noteText === '') {
           delete data.entries[editingYMD];
       } else {
-          data.entries[editingYMD] = { amount: roundedNum, note: noteText };
+          data.entries[editingYMD] = { amount: finalNum, note: noteText };
       }
       
       closeEditor();
@@ -841,9 +871,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CURRENCY CHANGE ---
     if(currencySelect) currencySelect.addEventListener('change', async (e) => {
         data.currency = e.target.value;
-        if (currentUserId) {
-            await saveData(currentUserId); 
-        }
         renderCalendar();
     });
 
@@ -857,12 +884,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const entry = data.entries[k];
             const amount = entry.amount || 0;
             const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); 
-            rows.push([k, String(amount), data.currency, note]);
+            rows.push([k, String(amount), data.currency, note]); 
             totalProfit += amount;
         }
         const totalLabel = (totalProfit < 0) ? 'Total Loss' : 'Total Profit';
         rows.push(['---', '---', '---', '---']); 
-        rows.push([totalLabel, String(totalProfit.toFixed(2)), data.currency, '']);
+        rows.push([totalLabel, String(totalProfit), data.currency, '']);
         
         const csv=rows.map(r=>r.join(',')).join('\n');
         const blob=new Blob([csv],{type:'text/csv'});
