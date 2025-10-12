@@ -317,15 +317,15 @@ textarea {
                     <span class="icon">☀️</span> <span id="themeLabel">Terang</span>
                 </div>
                 <select id="currencySelect" style="margin-top:0; max-width: 100px;">
-                    <option value="USD">USD ($)</option>
                     <option value="IDR">IDR (Rp)</option>
+                    <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="JPY">JPY (¥)</option>
                     <option value="BTC">BTC (₿)</option>
                 </select>
                 <button class="btn" id="todayBtn" style="margin-top:0;">Hari Ini</button>
                 <button class="btn export" id="exportCsv" style="margin-top:0;">Export CSV</button>
-                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red);">Reset Data</button>
+                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red);">Reset Data Mata Uang Aktif</button>
             </div>
             
         </div>
@@ -406,7 +406,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     let currentUserId = null; 
-    let data = { entries: {}, currency: 'USD' }; 
+    
+    // --- DATA SEKARANG BERISI SEMUA ENTRI DARI SEMUA MATA UANG ---
+    // data = { currentCurrency: 'IDR', allEntries: { IDR: { yyyy-mm-dd: {amount, note} }, USD: { ... } } }
+    let data = { currentCurrency: 'IDR', allEntries: {} }; 
     
     const html = document.documentElement; 
     const loginCard = document.getElementById('loginCard');
@@ -441,63 +444,102 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'users/' + uid;
     }
 
+    // --- FUNGSI UNTUK MENGAMBIL ENTRI MATA UANG AKTIF ---
+    function getCurrentEntries() {
+        return data.allEntries[data.currentCurrency] || {};
+    }
+    
+    // --- FUNGSI UNTUK MEMUAT SEMUA DATA ---
     async function loadData(uid){ 
         try {
             const snapshot = await database.ref(getDbPath(uid)).once('value');
-            const loadedData = snapshot.val() || {entries:{}, currency: 'USD'}; 
-            if (!loadedData.currency) { loadedData.currency = 'USD'; }
+            const loadedData = snapshot.val() || { entries: {}, currency: 'IDR' }; 
             
-            for (const key in loadedData.entries) {
-                if (typeof loadedData.entries[key] === 'number') {
-                    loadedData.entries[key] = { amount: loadedData.entries[key], note: '' }; 
+            // --- LOGIKA MIGRASI/PENYESUAIAN DATA BARU (DARI single currency ke multi-currency) ---
+            let finalEntries = loadedData.allEntries || {};
+            if (loadedData.entries && Object.keys(loadedData.entries).length > 0) {
+                 console.warn("Mengkonversi struktur data lama (single currency) ke struktur multi-currency (disimpan di IDR).");
+                 finalEntries['IDR'] = loadedData.entries;
+                 delete loadedData.entries; 
+            }
+
+            // Memastikan format objek {amount, note}
+            for (const currency in finalEntries) {
+                for (const key in finalEntries[currency]) {
+                    if (typeof finalEntries[currency][key] === 'number') {
+                        finalEntries[currency][key] = { amount: finalEntries[currency][key], note: '' }; 
+                    }
                 }
             }
             
-            return loadedData;
+            return {
+                currentCurrency: loadedData.currency || 'IDR',
+                allEntries: finalEntries
+            };
+
         } catch (error) {
             console.error("Error loading data from Firebase:", error);
-            return {entries:{}, currency: 'USD'}; 
+            return { currentCurrency: 'IDR', allEntries: {} }; 
         }
     }
 
+    // --- FUNGSI UNTUK MENYIMPAN SEMUA DATA ---
     async function saveData(uid){ 
         if (!uid) return;
         try {
+            // Bersihkan data yang 0 atau kosong sebelum disimpan
             const entriesToSave = {};
-            for (const ymd in data.entries) {
-                const entry = data.entries[ymd];
-                const amount = Number(entry.amount); 
-                
-                if (amount !== 0 || entry.note.trim() !== '') {
-                     entriesToSave[ymd] = { amount: amount, note: entry.note };
+            for (const currency in data.allEntries) {
+                const cleanedCurrencyEntries = {};
+                for (const ymd in data.allEntries[currency]) {
+                    const entry = data.allEntries[currency][ymd];
+                    const amount = Number(entry.amount); 
+                    
+                    if (amount !== 0 || entry.note.trim() !== '') {
+                         cleanedCurrencyEntries[ymd] = { amount: amount, note: entry.note };
+                    }
+                }
+                if (Object.keys(cleanedCurrencyEntries).length > 0) {
+                     entriesToSave[currency] = cleanedCurrencyEntries;
                 }
             }
-            data.entries = entriesToSave;
-            await database.ref(getDbPath(uid)).set({ entries: data.entries, currency: data.currency });
+            
+            data.allEntries = entriesToSave;
+            
+            // Simpan semua entri dan currentCurrency
+            await database.ref(getDbPath(uid)).set({ 
+                allEntries: data.allEntries, 
+                currency: data.currentCurrency // Simpan currency terakhir yang dipilih
+            });
         } catch (error) {
             console.error("Error saving data to Firebase:", error);
             alert("Gagal menyimpan data ke cloud.");
         }
     }
     
-    async function resetAllData(uid) {
+    // --- PERUBAHAN BESAR: FUNGSI RESET HANYA UNTUK MATA UANG AKTIF ---
+    async function resetCurrentCurrencyData(uid) {
         if (!uid) return alert('Silakan login terlebih dahulu!');
         
-        const confirm1 = confirm("PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda dari cloud (Firebase). Data tidak dapat dikembalikan.\n\nApakah Anda YAKIN ingin melanjutkan?");
+        const currentCurrency = data.currentCurrency;
+        
+        const confirm1 = confirm(`PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda untuk mata uang ${currentCurrency} dari cloud (Firebase). Data tidak dapat dikembalikan.\n\nApakah Anda YAKIN ingin melanjutkan?`);
         
         if (!confirm1) {
             return; 
         }
 
-        const confirm2 = confirm("PERINGATAN AKHIR! Semua data Profit Calendar Anda akan hilang PERMANEN. Pastikan Anda sudah meng-Export CSV.\n\nTekan OK untuk menghapus SEMUA DATA.");
+        const confirm2 = confirm(`PERINGATAN AKHIR! Semua data ${currentCurrency} Anda akan hilang PERMANEN. Pastikan Anda sudah meng-Export CSV.\n\nTekan OK untuk menghapus SEMUA DATA ${currentCurrency}.`);
 
         if (confirm2) {
             try {
-                await database.ref(getDbPath(uid)).remove();
+                // Hapus node specific mata uang
+                await database.ref(getDbPath(uid) + `/allEntries/${currentCurrency}`).remove();
                 
-                data = { entries: {}, currency: data.currency || 'USD' }; 
+                // Hapus juga dari data lokal
+                delete data.allEntries[currentCurrency];
                 
-                alert("Data berhasil direset. Semua data profit/loss Anda telah dihapus dari cloud.");
+                alert(`Data ${currentCurrency} berhasil direset. Semua data profit/loss untuk mata uang ini telah dihapus dari cloud.`);
                 renderCalendar(); 
             } catch (error) {
                 console.error("Error deleting data from Firebase:", error);
@@ -519,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
              // Menggunakan 'id-ID' memastikan format ribuan pakai titik dan desimal pakai koma
              displayAmount = Math.abs(amount).toLocaleString('id-ID', decimalOptions); 
         } else {
-            // Untuk mata uang lain (USD, EUR, BTC), paksakan 2 desimal (menggunakan toFixed)
+            // Untuk mata uang lain (USD, EUR, BTC), paksakan 2 desimal
             displayAmount = Math.abs(amount).toFixed(2);
         }
         
@@ -604,6 +646,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const grid = document.getElementById('calendarGrid'); 
       if(!grid) return; 
 
+      const currentEntries = getCurrentEntries(); // Gunakan entri untuk mata uang aktif
+      const currentCurrency = data.currentCurrency;
+      
       grid.innerHTML='';
       renderWeekdayHeader(); 
 
@@ -615,7 +660,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       for(let d=1;d<=daysInMonth;d++){
         const ymd = formatYMD(viewYear,viewMonth,d);
-        const entry = data.entries[ymd] || { amount: 0, note: '' };
+        
+        // Cek entri hanya di mata uang yang sedang aktif
+        const entry = currentEntries[ymd] || { amount: 0, note: '' }; 
         const amt = entry.amount;
         const note = entry.note;
         
@@ -624,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if(ymd===formatYMD(today.getFullYear(),today.getMonth(),today.getDate())) cell.classList.add('today');
         
-        const amountDisplay = formatCurrency(amt, data.currency); 
+        const amountDisplay = formatCurrency(amt, currentCurrency); 
         const lossClass = amt < 0 ? ' loss' : (amt > 0 ? ' profit' : '');
         
         let noteIndicator = note.trim() !== '' ? '<span class="note-indicator">📝</span>' : '';
@@ -644,7 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openEditor(ymd, amt, note) {
       if (!editorModal) return;
       editingYMD = ymd;
-      editorTitle.textContent = `Edit Data ${ymd} (${data.currency})`; 
+      editorTitle.textContent = `Edit Data ${ymd} (${data.currentCurrency})`; 
       
       // Tampilkan angka mentah yang disimpan
       editorAmtInput.value = amt === 0 ? '' : String(amt); 
@@ -658,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
       editingYMD = null;
     }
     
-    // --- FUNGSI BARU: CLEAN & PARSE INPUT ANGKA (MENANGANI IDR) ---
+    // --- FUNGSI CLEAN & PARSE INPUT ANGKA (MENANGANI IDR) ---
     function parseInput(inputString, currency) {
         let cleanString = inputString.trim();
 
@@ -697,19 +744,21 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!monthTotalEl || !avgDayEl || !daysCountEl || !quickAmt) return;
         
+        const currentEntries = getCurrentEntries();
+        const currentCurrency = data.currentCurrency;
         const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
         let total=0,count=0;
         
-        for(const k in data.entries){ 
+        for(const k in currentEntries){ // Hanya iterasi di mata uang aktif
             if(k.startsWith(monthKeyPrefix)){ 
-                const entry = data.entries[k];
+                const entry = currentEntries[k];
                 const amount = Number(entry.amount || 0); 
                 total += amount; 
                 if(amount !== 0 || entry.note.trim() !== '') count++; 
             }
         }
         
-        const totalDisplay = formatCurrency(total, data.currency);
+        const totalDisplay = formatCurrency(total, currentCurrency);
         monthTotalEl.innerHTML = totalDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
         
         monthTotalEl.classList.remove('loss', 'profit');
@@ -720,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const avgDay = count ? (total / count) : 0;
-        const avgDisplay = formatCurrency(avgDay, data.currency);
+        const avgDisplay = formatCurrency(avgDay, currentCurrency);
         avgDayEl.innerHTML = avgDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
         
         avgDayEl.classList.remove('loss', 'profit');
@@ -731,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         daysCountEl.textContent = count;
-        quickAmt.placeholder = `Profit ${data.currency} (cth: 500.000 atau 10,50)`;
+        quickAmt.placeholder = `Profit ${currentCurrency} (cth: 500.000 atau 10,50)`;
     }
     
     // --- AUTENTIKASI ---
@@ -743,7 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (acctEmail) acctEmail.textContent = user.email;
       
         data = await loadData(user.uid);
-        if(currencySelect) currencySelect.value = data.currency; 
+        if(currencySelect) currencySelect.value = data.currentCurrency; 
         renderCalendar();
     }
 
@@ -811,11 +860,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const a = quickAmt.value;
       if(!d){ alert('Pilih tanggal'); return; }
       
-      const num = parseInput(a, data.currency); // KIRIM CURRENCY
+      const currentCurrency = data.currentCurrency;
+      const num = parseInput(a, currentCurrency); 
       
-      if(num === null){ alert('Masukkan angka profit yang valid! (Contoh: 500.000 atau 10,50)'); return; }
+      if(num === null){ alert(`Masukkan angka profit yang valid untuk ${currentCurrency}! (Contoh: 500.000 atau 10,50)`); return; }
       
-      data.entries[d] = { amount: num, note: '' }; 
+      // Pastikan array untuk mata uang ini ada
+      if (!data.allEntries[currentCurrency]) {
+          data.allEntries[currentCurrency] = {};
+      }
+
+      // Simpan data di bawah mata uang aktif
+      data.allEntries[currentCurrency][d] = { amount: num, note: '' }; 
       
       await saveData(currentUserId); 
       renderCalendar();
@@ -828,20 +884,26 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!editingYMD || !currentUserId) return; 
       const n = editorAmtInput.value.trim();
       const noteText = editorNoteInput.value.trim(); 
+      const currentCurrency = data.currentCurrency;
       
-      const num = parseInput(n, data.currency); // KIRIM CURRENCY
+      const num = parseInput(n, currentCurrency);
 
       if (num === null) {
-          alert('Masukkan angka profit yang valid! (Contoh: 500.000 atau 10,50)');
+          alert(`Masukkan angka profit yang valid untuk ${currentCurrency}! (Contoh: 500.000 atau 10,50)`);
           return;
       }
       
       const finalNum = num; 
       
+      // Pastikan array untuk mata uang ini ada
+      if (!data.allEntries[currentCurrency]) {
+          data.allEntries[currentCurrency] = {};
+      }
+      
       if (finalNum === 0 && noteText === '') {
-          delete data.entries[editingYMD];
+          delete data.allEntries[currentCurrency][editingYMD];
       } else {
-          data.entries[editingYMD] = { amount: finalNum, note: noteText };
+          data.allEntries[currentCurrency][editingYMD] = { amount: finalNum, note: noteText };
       }
       
       closeEditor();
@@ -855,46 +917,71 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteEditorBtn = document.getElementById('deleteEditorBtn');
     if(deleteEditorBtn) deleteEditorBtn.addEventListener('click', async () => {
       if(!currentUserId) return; 
-      if(confirm(`Yakin hapus data hari ${editingYMD}? (Profit & Catatan)`)){
-          delete data.entries[editingYMD];
+      const currentCurrency = data.currentCurrency;
+      if(confirm(`Yakin hapus data hari ${editingYMD} (${currentCurrency})? (Profit & Catatan)`)){
+          delete data.allEntries[currentCurrency][editingYMD];
           closeEditor();
           await saveData(currentUserId); 
           renderCalendar();
       }
     });
     
-    // --- HANDLER BARU: RESET DATA ---
+    // --- HANDLER BARU: RESET DATA MATA UANG AKTIF ---
     if(resetDataBtn) resetDataBtn.addEventListener('click', () => {
-        resetAllData(currentUserId);
+        resetCurrentCurrencyData(currentUserId);
     });
 
     // --- CURRENCY CHANGE ---
     if(currencySelect) currencySelect.addEventListener('change', async (e) => {
-        data.currency = e.target.value;
+        data.currentCurrency = e.target.value; // Simpan currency yang dipilih
         renderCalendar();
+        
+        // Simpan perubahan currency ke Firebase agar bisa di-load saat login berikutnya
+        if (currentUserId) {
+            await database.ref(getDbPath(currentUserId) + '/currency').set(data.currentCurrency);
+        }
     });
 
-    // --- EXPORT CSV ---
+    // --- EXPORT CSV DENGAN SEMUA MATA UANG ---
     const exportCsv = document.getElementById('exportCsv');
     if(exportCsv) exportCsv.addEventListener('click', ()=>{
         const rows=[['date','profit_amount', 'currency', 'note']]; 
-        let totalProfit = 0; 
+        let totalProfitPerCurrency = {};
         
-        for(const k of Object.keys(data.entries).sort()) {
-            const entry = data.entries[k];
-            const amount = entry.amount || 0;
-            const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); 
-            rows.push([k, String(amount), data.currency, note]); 
-            totalProfit += amount;
+        // Iterasi melalui semua mata uang yang ada di data
+        for (const currency in data.allEntries) {
+            const currencyEntries = data.allEntries[currency];
+            
+            // Sortir tanggal dan masukkan ke CSV
+            for(const k of Object.keys(currencyEntries).sort()) {
+                const entry = currencyEntries[k];
+                const amount = entry.amount || 0;
+                // Bersihkan koma dan baris baru di catatan agar tidak merusak format CSV
+                const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); 
+                
+                rows.push([k, String(amount), currency, note]); 
+                
+                // Hitung total
+                totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
+            }
         }
-        const totalLabel = (totalProfit < 0) ? 'Total Loss' : 'Total Profit';
+        
+        // Tambahkan baris total
         rows.push(['---', '---', '---', '---']); 
-        rows.push([totalLabel, String(totalProfit), data.currency, '']);
+        for (const currency of Object.keys(totalProfitPerCurrency).sort()) {
+            const total = totalProfitPerCurrency[currency];
+            const totalLabel = (total < 0) ? `Total Loss (${currency})` : `Total Profit (${currency})`;
+            // Format total untuk display yang benar (menggunakan toFixed(2) atau formatCurrency)
+            const displayTotal = total.toFixed(2); // menggunakan 2 desimal di CSV untuk konsistensi
+            rows.push([totalLabel, String(displayTotal), currency, '']);
+        }
         
         const csv=rows.map(r=>r.join(',')).join('\n');
         const blob=new Blob([csv],{type:'text/csv'});
         const url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_${viewYear}_${String(viewMonth+1).padStart(2,'0')}_${data.currency}.csv`; a.click(); URL.revokeObjectURL(url);
+        
+        // Nama file
+        const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_multi_currency_export.csv`; a.click(); URL.revokeObjectURL(url);
     });
 
     if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
