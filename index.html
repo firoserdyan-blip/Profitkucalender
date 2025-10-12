@@ -121,6 +121,7 @@ header{display:flex;justify-content:space-between;align-items:center;flex-wrap:w
     flex-direction: column;justify-content: center;align-items: center;font-size: 10px; 
     line-height: 1.1;cursor: pointer;overflow: hidden;white-space: normal;
     transition: background 0.3s;
+    position: relative; /* Ditambahkan untuk posisi indikator catatan */
 }
 [data-theme="dark"] .day {
     border: 1px solid rgba(255,255,255,0.08); 
@@ -172,6 +173,7 @@ input[type=number], input[type=date], select{
 }
 .btn{background:var(--accent);color:white;padding:8px 10px;border-radius:8px;border:0;cursor:pointer;white-space:nowrap; width: auto !important;}
 .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
+.btn.danger{background:#dc2626; color:white; padding:8px 10px; border-radius:8px; border:0; cursor:pointer;} /* Gaya Tombol Reset Data */
 
 #editorModal {
     position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); 
@@ -250,7 +252,7 @@ textarea {
     
     .cal-header .actions {
         display: grid; 
-        grid-template-columns: 1fr 1fr; 
+        grid-template-columns: 1fr 1fr; /* Mengubah menjadi 2 kolom */
         width: 100%;
         gap: 8px; 
         margin-top: 8px; 
@@ -260,6 +262,10 @@ textarea {
         margin-top: 0 !important; 
         width: 100% !important; 
         box-sizing: border-box;
+    }
+    /* Pastikan tombol Reset Data juga diatur dengan benar di grid */
+    .cal-header .actions #resetDataBtn {
+        grid-column: span 2; /* Agar tombol Reset mengambil seluruh lebar baris */
     }
     
     #weekdayHeader .muted.small {
@@ -321,7 +327,7 @@ textarea {
                 </select>
                 <button class="btn" id="todayBtn" style="margin-top:0;">Hari Ini</button>
                 <button class="btn export" id="exportCsv" style="margin-top:0;">Export CSV</button>
-            </div>
+                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red);">Reset Data</button> </div>
             
         </div>
         
@@ -415,12 +421,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const editorModal = document.getElementById('editorModal');
     const editorTitle = document.getElementById('editorTitle');
     const editorAmtInput = document.getElementById('editorAmt');
-    const editorNoteInput = document.getElementById('editorNote'); // INPUT BARU
+    const editorNoteInput = document.getElementById('editorNote'); 
     const quickDate = document.getElementById('quickDate');
     const quickAmt = document.getElementById('quickAmt');
     const themeToggle = document.getElementById('themeToggle');
     const themeLabel = document.getElementById('themeLabel');
     const themeIcon = themeToggle ? themeToggle.querySelector('.icon') : null;
+    const resetDataBtn = document.getElementById('resetDataBtn'); // Tombol Baru
 
     let editingYMD = null; 
     const today = new Date();
@@ -474,6 +481,37 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error saving data to Firebase:", error);
             alert("Gagal menyimpan data ke cloud.");
+        }
+    }
+    
+    // FUNGSI BARU: RESET DATA
+    async function resetAllData(uid) {
+        if (!uid) return alert('Silakan login terlebih dahulu!');
+        
+        // Peringatan Pertama
+        const confirm1 = confirm("PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda dari cloud (Firebase). Data tidak dapat dikembalikan.\n\nApakah Anda YAKIN ingin melanjutkan?");
+        
+        if (!confirm1) {
+            return; 
+        }
+
+        // Peringatan Kedua
+        const confirm2 = confirm("PERINGATAN AKHIR! Semua data Profit Calendar Anda akan hilang PERMANEN. Pastikan Anda sudah meng-Export CSV.\n\nTekan OK untuk menghapus SEMUA DATA.");
+
+        if (confirm2) {
+            try {
+                // Hapus data pengguna di Firebase
+                await database.ref(getDbPath(uid)).remove();
+                
+                // Reset data di aplikasi lokal
+                data = { entries: {}, currency: data.currency || 'USD' }; 
+                
+                alert("Data berhasil direset. Semua data profit/loss Anda telah dihapus dari cloud.");
+                renderCalendar(); 
+            } catch (error) {
+                console.error("Error deleting data from Firebase:", error);
+                alert("Gagal mereset data. Silakan coba lagi.");
+            }
         }
     }
 
@@ -793,6 +831,11 @@ document.addEventListener('DOMContentLoaded', () => {
           await saveData(currentUserId); 
           renderCalendar();
       }
+    });
+    
+    // --- HANDLER BARU: RESET DATA ---
+    if(resetDataBtn) resetDataBtn.addEventListener('click', () => {
+        resetAllData(currentUserId);
     });
 
     // --- CURRENCY CHANGE ---
