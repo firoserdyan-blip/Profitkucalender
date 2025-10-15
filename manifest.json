@@ -2,29 +2,22 @@
   "name": "ProfitKu - Profit Calendar",
   "short_name": "ProfitKu",
   
-  // KOREKSI UTAMA: Start URL adalah domain akar
-  "start_url": "/", 
+  // BARIS BARU INI ADALAH KUNCINYA. ID BARU MEMAKSA REFRESH IKON.
+  "id": "/?version=1", 
   
+  "start_url": "/", 
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      // KOREKSI PATH: Ikon sekarang di root
-      "src": "/logo.png", 
+      "src": "logo.png", 
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      // KOREKSI PATH: Ikon ukuran besar
-      "src": "/logo.png", 
+      "src": "logo.png", 
       "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      // KOREKSI PATH: Ikon ukuran favicon
-      "src": "/logo.png", 
-      "sizes": "48x48",
       "type": "image/png"
     }
   ]
