@@ -1,15 +1,16 @@
 {
   "name": "ProfitKu - Calendar",
   "short_name": "ProfitKu",
-  "start_url": "/ProfitKu-Calender/index.html",
+  "start_url": "/", <-- CUKUP DENGAN GARIS MIRING TUNGGAL
   "display": "standalone",
-  "background_color": "#f6f8fb",
+  "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/ProfitKu-Calender/logo.png",
-      "sizes": "512x512",
+      "src": "/logo.png", <-- HAPUS /ProfitKu-Calender/
+      "sizes": "192x192",
       "type": "image/png"
-    }
+    },
+    // ... ikon lainnya
   ]
 }
