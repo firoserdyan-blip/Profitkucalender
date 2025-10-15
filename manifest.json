@@ -2,7 +2,7 @@
   "name": "ProfitKu - Profit Calendar",
   "short_name": "ProfitKu",
   
-  // BARIS BARU INI ADALAH KUNCINYA. ID BARU MEMAKSA REFRESH IKON.
+  
   "id": "/?version=1", 
   
   "start_url": "/", 
