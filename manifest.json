@@ -1,15 +1,25 @@
 {
-  "name": "ProfitKu - Calendar",
+  "name": "ProfitKu - Profit Calendar",
   "short_name": "ProfitKu",
+  
+  // KOREKSI: URL Awal harus '/' untuk domain akar
   "start_url": "/", 
+  
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/logo.png",
+      // KOREKSI: Path Ikon sekarang ada di root
+      "src": "/logo.png", 
       "sizes": "192x192",
       "type": "image/png"
     },
+    {
+      // Tambahkan ukuran lain jika ada
+      "src": "/logo.png", 
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
