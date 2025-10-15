@@ -2,7 +2,7 @@
   "name": "ProfitKu - Profit Calendar",
   "short_name": "ProfitKu",
   
-  // KOREKSI: URL Awal harus '/' untuk domain akar
+  // KOREKSI UTAMA: Start URL adalah domain akar
   "start_url": "/", 
   
   "display": "standalone",
@@ -10,15 +10,21 @@
   "theme_color": "#2563eb",
   "icons": [
     {
-      // KOREKSI: Path Ikon sekarang ada di root
+      // KOREKSI PATH: Ikon sekarang di root
       "src": "/logo.png", 
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      // Tambahkan ukuran lain jika ada
+      // KOREKSI PATH: Ikon ukuran besar
       "src": "/logo.png", 
       "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      // KOREKSI PATH: Ikon ukuran favicon
+      "src": "/logo.png", 
+      "sizes": "48x48",
       "type": "image/png"
     }
   ]
