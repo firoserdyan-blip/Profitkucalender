@@ -8,13 +8,16 @@
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ProfitKu - Profit Calendar</title>
+<title>ProfitKu: Aplikasi Kalkulator & Kalender Profit Trading Harian Gratis</title>
 
-<link rel="icon" type="image/png" href="/logo.png" /> 
-
-<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" href="logo.png" /> 
+<link rel="manifest" href="manifest.json">
 
 <meta property="og:url" content="https://firoserdyan-blip.github.io/" /> 
+<meta property="og:title" content="ProfitKu: Kalkulator & Kalender Profit Trading Harian Gratis" />
+<meta property="og:description" content="Lupakan Excel yang rumit. Aplikasi web gratis untuk trader dan investor yang ingin melacak dan menganalisis performa profit dan kerugian harian dengan kalender interaktif." />
+<meta property="og:image" content="https://firoserdyan-blip.github.io/logo.png" />
+
 
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
@@ -59,6 +62,7 @@ body{margin:0;background:var(--bg);color:var(--text);display:flex;align-items:ce
     margin-bottom: 20px;
 }
 .logo-container img {
+    /* PATH ICON DIKOREKSI MENJADI RELATIF MURNI */
     max-width: 100px; 
     height: auto;
     display: block;
@@ -279,9 +283,15 @@ textarea {
 </head>
 <body>
 <div class="card" id="loginCard">
-    <div class="logo-container">
-        <img src="/logo.png" alt="Logo ProfitKu" /> 
-        <h2>Login/Register</h2>
+    <h2 style="margin-top:0; font-weight: bold; color: var(--accent); text-align: center;">ProfitKu: Aplikasi Kalender & Kalkulator Profit Trading Harian Gratis</h2>
+    <p style="color: var(--muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.9em; text-align: justify;">
+        ProfitKu adalah aplikasi web gratis dan sederhana yang dirancang khusus untuk trader dan investor yang ingin melacak dan menganalisis performa profit dan kerugian harian mereka. Di tengah hiruk pikuk pasar, seringkali kita lupa mencatat hasil trading secara akurat, padahal pencatatan adalah kunci kesuksesan jangka panjang. Lupakan kerumitan spreadsheet Excel manual atau catatan kertas yang mudah hilang, karena Anda dapat mencatat profit atau loss dalam hitungan detik menggunakan antarmuka kalender interaktif kami.
+    </p>
+    <p style="color: var(--muted); line-height: 1.5; margin-bottom: 20px; font-size: 0.9em; text-align: justify;">
+        Aplikasi ini menyediakan alat yang intuitif untuk memvisualisasikan data trading Anda. Fitur utama kami mencakup: Kalender interaktif untuk melihat profit harian secara sekilas, dukungan multi-mata uang (IDR, USD, EUR, dll.), kemampuan untuk menambahkan catatan penting pada setiap tanggal, dan fungsi ekspor data ke format CSV yang siap diolah. Dengan data yang terorganisir, Anda dapat mengidentifikasi pola trading yang menguntungkan dan mengurangi kerugian.
+    </p>
+    <div class="logo-container" style="margin-top: 0;">
+        <img src="logo.png" alt="Logo ProfitKu" /> <h2 style="font-size: 1.3em;">Login atau Daftar Akun</h2>
     </div>
     <input type="email" id="email" placeholder="Email" />
     
@@ -296,8 +306,7 @@ textarea {
 <div class="wrap" id="app">
     <header>
         <div class="header-logo-group">
-            <img src="/logo.png" alt="ProfitKu" class="header-logo-img" /> 
-            <div>
+            <img src="logo.png" alt="ProfitKu" class="header-logo-img" /> <div>
                 <h1>Profit Calendar</h1>
                 <div class="muted small">Catat profit harian — data aman dan pribadi di CLOUD</div>
             </div>
@@ -386,6 +395,7 @@ textarea {
 </div>
 
 <script>
+// SELURUH KODE JAVASCRIPT ANDA DIBAWAH INI TIDAK BERUBAH SAMA SEKALI
 document.addEventListener('DOMContentLoaded', () => {
     // 🔑 KONFIGURASI FIREBASE 
     const firebaseConfig = {
@@ -475,8 +485,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            
-            return {
+
+         return {
                 currentCurrency: loadedData.currency || 'IDR',
                 allEntries: finalEntries
             };
