@@ -303,6 +303,31 @@ textarea {
     <button id="loginBtn">Login</button>
     <button class="btn ghost" id="registerBtn" style="margin-top: 8px;">Daftar Akun Baru</button>
 </div>
+
+<div class="card" style="max-width:400px; margin-top: 20px; text-align: left; padding: 20px; border: 1px solid #e5e7eb;">
+    <h3 style="margin-top: 0; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 10px;">ProfitKu: Aplikasi Kalender Profit & Loss Harian</h3>
+    
+    <p style="font-size: 14px; color: var(--text);">Selamat datang di ProfitKu, aplikasi web (Single Page Application) yang dirancang untuk membantu trader, investor, dan pelaku bisnis online melacak riwayat keuangan harian mereka dengan mudah. Kami mengatasi masalah lupa mencatat profit/loss harian dari berbagai sumber seperti trading saham, crypto, forex, atau bisnis online dengan sistem kalender yang efisien. Data Anda disimpan aman dan pribadi di cloud (Firebase) dan hanya dapat diakses melalui login akun Anda. Kami menjamin kerahasiaan data Anda.</p>
+
+    <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">Fitur Utama ProfitKu:</h4>
+    <ul style="font-size: 14px; color: var(--muted); padding-left: 20px; margin-top: 5px; list-style-type: square;">
+        <li>✅ **Pencatatan Harian:** Masukkan jumlah profit atau kerugian (bisa negatif) untuk setiap hari.</li>
+        <li>✅ **Dukungan Multi-Mata Uang:** Catat profit dalam IDR, USD, EUR, JPY, hingga Bitcoin (₿).</li>
+        <li>✅ **Ringkasan Otomatis:** Dapatkan total profit bulanan dan rata-rata profit per hari secara otomatis.</li>
+        <li>✅ **Catatan Harian:** Tambahkan deskripsi singkat pada setiap entri kalender (misal: "Profit dari BTC/IDR" atau "Loss karena telat *cut loss*").</li>
+        <li>✅ **Ekspor Data:** Export semua data profit Anda ke file CSV kapan saja untuk analisis lebih lanjut.</li>
+        <li>✅ **Data Aman:** Dilindungi oleh sistem login Firebase Google yang terpercaya.</li>
+    </ul>
+
+    <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">FAQ (Pertanyaan Umum)</h4>
+    <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah data saya aman?**</p>
+    <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya. Semua data dienkripsi dan disimpan di database pribadi Anda di Firebase. Kami tidak membagikan data riwayat profit/loss Anda kepada pihak ketiga. Keamanan akun dijamin oleh Firebase Authentication.</p>
+    
+    <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah aplikasi ini gratis?**</p>
+    <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya, ProfitKu sepenuhnya gratis. Kami berupaya menjaga kualitas layanan dan akan menggunakan AdSense untuk menutupi biaya server (hosting) dan pemeliharaan aplikasi yang digunakan untuk menyimpan data Anda.</p>
+    
+    <p style="font-size: 14px; color: var(--accent); margin-top: 25px; text-align: center;">**Silakan Login atau Daftar untuk mulai melacak profit harian Anda!**</p>
+</div>
 <div class="wrap" id="app">
     <header>
         <div class="header-logo-group">
@@ -800,6 +825,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AUTENTIKASI ---
     async function showApp(user){
         if (loginCard) loginCard.style.display = 'none';
+        
+        // Sembunyikan semua elemen di luar app (termasuk deskripsi panjang)
+        const contentCards = document.querySelectorAll('body > .card');
+        contentCards.forEach(card => {
+            if (card.id !== 'loginCard') card.style.display = 'none';
+        });
+
         if (app) app.style.display = 'block';
         
         currentUserId = user.uid;
@@ -850,6 +882,13 @@ document.addEventListener('DOMContentLoaded', () => {
           showApp(user);
       } else {
           if (loginCard) loginCard.style.display = 'block';
+          
+          // Tampilkan kembali elemen di luar app (termasuk deskripsi panjang)
+          const contentCards = document.querySelectorAll('body > .card');
+          contentCards.forEach(card => {
+               if (card.id !== 'loginCard' && card.parentElement.id !== 'app') card.style.display = 'block';
+          });
+          
           if (app) app.style.display = 'none';
           currentUserId = null;
           renderWeekdayHeader(); 
