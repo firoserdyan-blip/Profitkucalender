@@ -8,14 +8,14 @@
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ProfitKu: Aplikasi Kalkulator & Kalender Profit Trading Harian Gratis</title>
+<title>ProfitKu: Aplikasi Kalender Profit Trading Harian Gratis (Demo)</title>
 
 <link rel="icon" type="image/png" href="logo.png" /> 
 <link rel="manifest" href="manifest.json">
 
 <meta property="og:url" content="https://firoserdyan-blip.github.io/" /> 
-<meta property="og:title" content="ProfitKu: Kalkulator & Kalender Profit Trading Harian Gratis" />
-<meta property="og:description" content="Lupakan Excel yang rumit. Aplikasi web gratis untuk trader dan investor yang ingin melacak dan menganalisis performa profit dan kerugian harian dengan kalender interaktif." />
+<meta property="og:title" content="ProfitKu: Kalender Profit Trading Harian Gratis" />
+<meta property="og:description" content="Lupakan Excel yang rumit. Aplikasi web gratis untuk trader dan investor yang ingin melacak dan menganalisis performa profit dan kerugian harian dengan kalender interaktif. Tinjau performa trading Anda sekarang!" />
 <meta property="og:image" content="https://firoserdyan-blip.github.io/logo.png" />
 
 
@@ -56,26 +56,7 @@
 body{margin:0;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:15px;transition:background 0.3s, color 0.3s;}
 .card{background:var(--card);padding:20px;border-radius:12px;box-shadow:var(--shadow);width:100%;max-width:400px;transition:background 0.3s, box-shadow 0.3s;}
 
-/* --- CSS TAMBAHAN UNTUK LOGO DI HALAMAN LOGIN --- */
-.logo-container {
-    text-align: center;
-    margin-bottom: 20px;
-}
-.logo-container img {
-    /* PATH ICON DIKOREKSI MENJADI RELATIF MURNI */
-    max-width: 100px; 
-    height: auto;
-    display: block;
-    margin: 0 auto 10px; 
-}
-.logo-container h2 {
-    font-size: 1.5em; 
-    color: var(--accent);
-    margin: 0;
-}
-/* ------------------------------------------------ */
-
-/* --- CSS TAMBAHAN UNTUK LOGO DI HEADER UTAMA --- */
+/* --- CSS LOGO HEADER UTAMA --- */
 .header-logo-group {
     display: flex; 
     align-items: center; 
@@ -109,9 +90,34 @@ input[type="email"]{width:100%;padding:10px;margin-top:10px;border-radius:8px;bo
 button{width:100%;padding:10px;margin-top:14px;background:var(--accent);color:white;border:0;border-radius:8px;cursor:pointer;transition:background 0.2s;}
 button:hover{filter:brightness(1.1);}
 
-.wrap{display:none;max-width:980px;margin:28px auto;padding:0 15px;width:100%;}
+/* MODIFIKASI WRAP AGAR SELALU TERLIHAT */
+.wrap{max-width:980px;margin:28px auto;padding:0 15px;width:100%;} 
+
 header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:0 5px;}
-.controls{display:flex;gap:8px;align-items:center;}
+
+/* KONTROL HEADER BARU */
+.controls{display:flex;gap:8px;align-items:center; flex-wrap: wrap;} 
+.login-status-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+/* STYLE BARU UNTUK PERINGATAN MERAH */
+.login-alert {
+    color: var(--red);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    background: rgba(220, 38, 38, 0.05);
+    text-align: right;
+}
+[data-theme="dark"] .login-alert {
+    background: rgba(220, 38, 38, 0.2);
+}
+/* --------------------------------- */
 
 .calendar{
     margin-top:18px;display:flex;flex-direction:column;align-items:center;padding: 0 20px; box-sizing: border-box;width: 100%; 
@@ -136,7 +142,6 @@ header{display:flex;justify-content:space-between;align-items:center;flex-wrap:w
 }
 .day .date{font-size:10px;color:var(--muted)}
 
-/* Gaya untuk ikon catatan */
 .day .note-indicator {
     position: absolute;
     top: 2px;
@@ -171,7 +176,12 @@ input[type=date], select, input[type=text]{
 }
 #quickSave{width:auto;flex:none;margin-top:0;}
 
-.footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;width:100%;}
+/* PERUBAHAN FOOTER */
+.main-footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;width:100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--input-border); gap: 10px;}
+.main-footer .footer-note { flex-grow: 1; text-align: left; }
+.main-footer .footer-btn { flex-shrink: 0; margin: 0; }
+/* -------------------- */
+
 .actions{
     display:flex;
     gap:8px;
@@ -183,21 +193,38 @@ input[type=date], select, input[type=text]{
 .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
 .btn.danger{background:#dc2626; color:white; padding:8px 10px; border-radius:8px; border:0; cursor:pointer;} 
 
-#editorModal {
+/* CSS untuk Modal (Editor, Login, About) */
+.modal-overlay {
     position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); 
     z-index:1000; align-items:center; justify-content:center;
     display: none; 
+    padding: 15px;
 }
-[data-theme="dark"] #editorModal {
+[data-theme="dark"] .modal-overlay {
     background:rgba(0,0,0,0.8);
 }
-
 .modal-content-container {
     max-width: 300px;
     padding: 20px;
     background: var(--card);
     border-radius: 12px;
     box-shadow: var(--shadow);
+    width: 100%;
+    max-height: 90vh; 
+    overflow-y: auto; 
+}
+.modal-content-container h3, .modal-content-container h4 {
+    color: var(--accent);
+}
+.modal-content-container .logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.modal-content-container .logo-container img {
+    max-width: 80px; 
+    height: auto;
+    display: block;
+    margin: 0 auto 10px; 
 }
 
 textarea {
@@ -252,6 +279,9 @@ textarea {
     }
     
     .controls {width: auto; justify-content: flex-end;}
+    .login-status-group { flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+    .login-alert { text-align: center; width: 100%; }
+    
     .summary {max-width: none;}
     .stat {min-width: 100%;}
     .quick-action-bar input, .quick-action-bar button, .quick-action-bar select {flex: 1 1 45%;}
@@ -278,67 +308,29 @@ textarea {
         font-size: 10px; 
         font-weight: 600; 
     }
+    
+    .main-footer {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .main-footer .footer-note { text-align: center; }
 }
 </style>
 </head>
 <body>
-<div class="card" id="loginCard">
-    <h2 style="margin-top:0; font-weight: bold; color: var(--accent); text-align: center;">ProfitKu: Aplikasi Kalender & Kalkulator Profit Trading Harian Gratis</h2>
-    <p style="color: var(--muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.9em; text-align: justify;">
-        ProfitKu adalah aplikasi web gratis dan sederhana yang dirancang khusus untuk trader dan investor yang ingin melacak dan menganalisis performa profit dan kerugian harian mereka. Di tengah hiruk pikuk pasar, seringkali kita lupa mencatat hasil trading secara akurat, padahal pencatatan adalah kunci kesuksesan jangka panjang. Lupakan kerumitan spreadsheet Excel manual atau catatan kertas yang mudah hilang, karena Anda dapat mencatat profit atau loss dalam hitungan detik menggunakan antarmuka kalender interaktif kami.
-    </p>
-    <p style="color: var(--muted); line-height: 1.5; margin-bottom: 20px; font-size: 0.9em; text-align: justify;">
-        Aplikasi ini menyediakan alat yang intuitif untuk memvisualisasikan data trading Anda. Fitur utama kami mencakup: Kalender interaktif untuk melihat profit harian secara sekilas, dukungan multi-mata uang (IDR, USD, EUR, dll.), kemampuan untuk menambahkan catatan penting pada setiap tanggal, dan fungsi ekspor data ke format CSV yang siap diolah. Dengan data yang terorganisir, Anda dapat mengidentifikasi pola trading yang menguntungkan dan mengurangi kerugian.
-    </p>
-    <div class="logo-container" style="margin-top: 0;">
-        <img src="logo.png" alt="Logo ProfitKu" /> <h2 style="font-size: 1.3em;">Login atau Daftar Akun</h2>
-    </div>
-    <input type="email" id="email" placeholder="Email" />
-    
-    <div class="password-container">
-        <input type="password" id="password" placeholder="Password (min 6 karakter)" />
-        <span class="password-toggle" id="togglePassword">&#x1f441;</span> 
-    </div>
-    
-    <button id="loginBtn">Login</button>
-    <button class="btn ghost" id="registerBtn" style="margin-top: 8px;">Daftar Akun Baru</button>
-</div>
-
-<div class="card" style="max-width:400px; margin-top: 20px; text-align: left; padding: 20px; border: 1px solid #e5e7eb;">
-    <h3 style="margin-top: 0; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 10px;">ProfitKu: Aplikasi Kalender Profit & Loss Harian</h3>
-    
-    <p style="font-size: 14px; color: var(--text);">Selamat datang di ProfitKu, aplikasi web (Single Page Application) yang dirancang untuk membantu trader, investor, dan pelaku bisnis online melacak riwayat keuangan harian mereka dengan mudah. Kami mengatasi masalah lupa mencatat profit/loss harian dari berbagai sumber seperti trading saham, crypto, forex, atau bisnis online dengan sistem kalender yang efisien. Data Anda disimpan aman dan pribadi di cloud (Firebase) dan hanya dapat diakses melalui login akun Anda. Kami menjamin kerahasiaan data Anda.</p>
-
-    <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">Fitur Utama ProfitKu:</h4>
-    <ul style="font-size: 14px; color: var(--muted); padding-left: 20px; margin-top: 5px; list-style-type: square;">
-        <li>✅ **Pencatatan Harian:** Masukkan jumlah profit atau kerugian (bisa negatif) untuk setiap hari.</li>
-        <li>✅ **Dukungan Multi-Mata Uang:** Catat profit dalam IDR, USD, EUR, JPY, hingga Bitcoin (₿).</li>
-        <li>✅ **Ringkasan Otomatis:** Dapatkan total profit bulanan dan rata-rata profit per hari secara otomatis.</li>
-        <li>✅ **Catatan Harian:** Tambahkan deskripsi singkat pada setiap entri kalender (misal: "Profit dari BTC/IDR" atau "Loss karena telat *cut loss*").</li>
-        <li>✅ **Ekspor Data:** Export semua data profit Anda ke file CSV kapan saja untuk analisis lebih lanjut.</li>
-        <li>✅ **Data Aman:** Dilindungi oleh sistem login Firebase Google yang terpercaya.</li>
-    </ul>
-
-    <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">FAQ (Pertanyaan Umum)</h4>
-    <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah data saya aman?**</p>
-    <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya. Semua data dienkripsi dan disimpan di database pribadi Anda di Firebase. Kami tidak membagikan data riwayat profit/loss Anda kepada pihak ketiga. Keamanan akun dijamin oleh Firebase Authentication.</p>
-    
-    <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah aplikasi ini gratis?**</p>
-    <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya, ProfitKu sepenuhnya gratis. Kami berupaya menjaga kualitas layanan dan akan menggunakan AdSense untuk menutupi biaya server (hosting) dan pemeliharaan aplikasi yang digunakan untuk menyimpan data Anda.</p>
-    
-    <p style="font-size: 14px; color: var(--accent); margin-top: 25px; text-align: center;">**Silakan Login atau Daftar untuk mulai melacak profit harian Anda!**</p>
-</div>
 <div class="wrap" id="app">
     <header>
         <div class="header-logo-group">
             <img src="logo.png" alt="ProfitKu" class="header-logo-img" /> <div>
                 <h1>Profit Calendar</h1>
-                <div class="muted small">Catat profit harian — data aman dan pribadi di CLOUD</div>
+                <div class="muted small">Aplikasi Gratis untuk Trader & Investor</div>
             </div>
         </div>
+        
         <div class="controls">
-            <div class="card small">Current account: <strong id="acctEmail"></strong></div>
-            <button class="btn ghost" id="logoutBtn">Logout</button>
+            <div id="authStatusContainer" class="login-status-group">
+                </div>
         </div>
     </header>
     <div class="card calendar">
@@ -363,7 +355,7 @@ textarea {
                 </select>
                 <button class="btn" id="todayBtn" style="margin-top:0;">Hari Ini</button>
                 <button class="btn export" id="exportCsv" style="margin-top:0;">Export CSV</button>
-                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red);">Reset Data Mata Uang Aktif</button>
+                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red); display: none;">Reset Data Mata Uang Aktif</button> 
             </div>
             
         </div>
@@ -393,8 +385,11 @@ textarea {
             <button class="btn" id="quickSave">Simpan</button>
         </div>
         
-        <div class="footer">Data aman, sinkron di semua device, dan terproteksi oleh login Firebase.</div>
-    </div>
+        <div class="main-footer">
+            <div class="footer-note">Data yang dimasukkan saat demo (belum login) tidak akan tersimpan.</div>
+            <button class="btn ghost footer-btn" id="showAboutModalBtn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Tentang Website & Fitur</button>
+        </div>
+        </div>
 </div>
 
 <div id="editorModal" style="display:none;" class="modal-overlay">
@@ -418,11 +413,59 @@ textarea {
         <button class="btn ghost" id="deleteEditorBtn" style="background:transparent; color:#dc2626; border:1px solid rgba(220,38,38,0.3); margin-top:10px;">Hapus Data</button>
     </div>
 </div>
+<div id="loginRegisterModal" style="display:none;" class="modal-overlay">
+    <div class="modal-content-container" id="loginModalContent">
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo ProfitKu" /> <h3>Login atau Daftar Akun</h3>
+        </div>
+        
+        <p id="loginModalAlert" style="color: var(--red); font-size: 0.9em; text-align: center; display: none;">
+            <strong style="font-weight: 700;">PERINGATAN!</strong> Anda harus Login/Daftar untuk menyimpan data ke Cloud.
+        </p>
 
+        <input type="email" id="modalEmail" placeholder="Email" />
+        
+        <div class="password-container">
+            <input type="password" id="modalPassword" placeholder="Password (min 6 karakter)" />
+            <span class="password-toggle" id="toggleModalPassword">&#x1f441;</span> 
+        </div>
+        
+        <button id="modalLoginBtn">Login</button>
+        <button class="btn ghost" id="modalRegisterBtn" style="margin-top: 8px;">Daftar Akun Baru</button>
+
+        <button class="btn ghost" id="closeLoginModalBtn" style="margin-top: 20px; color: var(--muted);">Kembali ke Kalender</button>
+    </div>
+</div>
+<div id="aboutModal" style="display:none;" class="modal-overlay">
+    <div class="modal-content-container" style="max-width: 600px;">
+        <h3 style="margin-top: 0; color: var(--accent);">ProfitKu: Aplikasi Kalender Profit & Loss Harian</h3>
+        
+        <p style="font-size: 14px; color: var(--text);">Selamat datang di ProfitKu, aplikasi web (Single Page Application) yang dirancang untuk membantu trader, investor, dan pelaku bisnis online melacak riwayat keuangan harian mereka dengan mudah. Kami mengatasi masalah lupa mencatat profit/loss harian dari berbagai sumber seperti trading saham, crypto, forex, atau bisnis online dengan sistem kalender yang efisien. Data Anda disimpan aman dan pribadi di cloud (Firebase) dan hanya dapat diakses melalui login akun Anda. Kami menjamin kerahasiaan data Anda.</p>
+
+        <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">Fitur Utama ProfitKu:</h4>
+        <ul style="font-size: 14px; color: var(--muted); padding-left: 20px; margin-top: 5px; list-style-type: square;">
+            <li>✅ **Pencatatan Harian:** Masukkan jumlah profit atau kerugian (bisa negatif) untuk setiap hari.</li>
+            <li>✅ **Dukungan Multi-Mata Uang:** Catat profit dalam IDR, USD, EUR, JPY, hingga Bitcoin (₿).</li>
+            <li>✅ **Ringkasan Otomatis:** Dapatkan total profit bulanan dan rata-rata profit per hari secara otomatis.</li>
+            <li>✅ **Catatan Harian:** Tambahkan deskripsi singkat pada setiap entri kalender (misal: "Profit dari BTC/IDR" atau "Loss karena telat *cut loss*").</li>
+            <li>✅ **Ekspor Data:** Export semua data profit Anda ke file CSV kapan saja untuk analisis lebih lanjut.</li>
+            <li>✅ **Data Aman:** Dilindungi oleh sistem login Firebase Google yang terpercaya.</li>
+        </ul>
+
+        <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">FAQ (Pertanyaan Umum)</h4>
+        <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah data saya aman?**</p>
+        <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya. Semua data dienkripsi dan disimpan di database pribadi Anda di Firebase. Kami tidak membagikan data riwayat profit/loss Anda kepada pihak ketiga. Keamanan akun dijamin oleh Firebase Authentication.</p>
+        
+        <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah aplikasi ini gratis?**</p>
+        <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya, ProfitKu sepenuhnya gratis. Kami berupaya menjaga kualitas layanan dan akan menggunakan AdSense untuk menutupi biaya server (hosting) dan pemeliharaan aplikasi yang digunakan untuk menyimpan data Anda.</p>
+        
+        <button class="btn" id="closeAboutModalBtn" style="margin-top: 20px; width: 100%;">Tutup</button>
+    </div>
+</div>
 <script>
-// SELURUH KODE JAVASCRIPT ANDA DIBAWAH INI TIDAK BERUBAH SAMA SEKALI
+// SELURUH KODE JAVASCRIPT ANDA DIBAWAH INI TELAH DIUBAH TOTAL UNTUK MENDUKUNG MODAL DAN DEMO
 document.addEventListener('DOMContentLoaded', () => {
-    // 🔑 KONFIGURASI FIREBASE 
+    // 🔑 KONFIGURASI FIREBASE (TIDAK BERUBAH)
     const firebaseConfig = {
       apiKey: "AIzaSyDIRmr2lJWqmoeoZHYIpakc8N_11JQ1Mo8",
       authDomain: "profitku-a5f3a.firebaseapp.com",
@@ -445,28 +488,36 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     let currentUserId = null; 
-    
-    // --- DATA SEKARANG BERISI SEMUA ENTRI DARI SEMUA MATA UANG ---
-    // data = { currentCurrency: 'IDR', allEntries: { IDR: { yyyy-mm-dd: {amount, note} }, USD: { ... } } }
-    let data = { currentCurrency: 'IDR', allEntries: {} }; 
+    let data = { currentCurrency: 'IDR', allEntries: {} }; // Data akan kosong saat belum login
     
     const html = document.documentElement; 
-    const loginCard = document.getElementById('loginCard');
     const app = document.getElementById('app');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const acctEmail = document.getElementById('acctEmail');
+    
+    // Elemen Header/Controls
+    const authStatusContainer = document.getElementById('authStatusContainer');
     const currencySelect = document.getElementById('currencySelect'); 
+    const resetDataBtn = document.getElementById('resetDataBtn');
+
+    // Elemen Quick Action
+    const quickDate = document.getElementById('quickDate');
+    const quickAmt = document.getElementById('quickAmt');
+    const quickSave = document.getElementById('quickSave');
+
+    // Elemen Modals
     const editorModal = document.getElementById('editorModal');
     const editorTitle = document.getElementById('editorTitle');
     const editorAmtInput = document.getElementById('editorAmt');
     const editorNoteInput = document.getElementById('editorNote'); 
-    const quickDate = document.getElementById('quickDate');
-    const quickAmt = document.getElementById('quickAmt');
+    const loginRegisterModal = document.getElementById('loginRegisterModal');
+    const modalEmailInput = document.getElementById('modalEmail');
+    const modalPasswordInput = document.getElementById('modalPassword');
+    const loginModalAlert = document.getElementById('loginModalAlert');
+    const aboutModal = document.getElementById('aboutModal');
+    
+    // Elemen Tema
     const themeToggle = document.getElementById('themeToggle');
     const themeLabel = document.getElementById('themeLabel');
     const themeIcon = themeToggle ? themeToggle.querySelector('.icon') : null;
-    const resetDataBtn = document.getElementById('resetDataBtn');
 
     let editingYMD = null; 
     const today = new Date();
@@ -483,26 +534,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'users/' + uid;
     }
 
-    // --- FUNGSI UNTUK MENGAMBIL ENTRI MATA UANG AKTIF ---
     function getCurrentEntries() {
+        // Saat belum login, data akan kosong, jadi kembalikan objek kosong untuk demo
+        if (!currentUserId) return {}; 
         return data.allEntries[data.currentCurrency] || {};
     }
     
-    // --- FUNGSI UNTUK MEMUAT SEMUA DATA ---
+    // FUNGSI LOAD DATA, SAVE DATA, FORMAT CURRENCY (TIDAK BERUBAH SIGNIFIKAN)
     async function loadData(uid){ 
+        // ... (Fungsi loadData yang sama)
         try {
             const snapshot = await database.ref(getDbPath(uid)).once('value');
             const loadedData = snapshot.val() || { entries: {}, currency: 'IDR' }; 
             
-            // --- LOGIKA MIGRASI/PENYESUAIAN DATA BARU (DARI single currency ke multi-currency) ---
             let finalEntries = loadedData.allEntries || {};
             if (loadedData.entries && Object.keys(loadedData.entries).length > 0) {
-                 console.warn("Mengkonversi struktur data lama (single currency) ke struktur multi-currency (disimpan di IDR).");
                  finalEntries['IDR'] = loadedData.entries;
                  delete loadedData.entries; 
             }
 
-            // Memastikan format objek {amount, note}
             for (const currency in finalEntries) {
                 for (const key in finalEntries[currency]) {
                     if (typeof finalEntries[currency][key] === 'number') {
@@ -522,11 +572,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- FUNGSI UNTUK MENYIMPAN SEMUA DATA ---
     async function saveData(uid){ 
         if (!uid) return;
+        // ... (Fungsi saveData yang sama)
         try {
-            // Bersihkan data yang 0 atau kosong sebelum disimpan
             const entriesToSave = {};
             for (const currency in data.allEntries) {
                 const cleanedCurrencyEntries = {};
@@ -545,10 +594,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             data.allEntries = entriesToSave;
             
-            // Simpan semua entri dan currentCurrency
             await database.ref(getDbPath(uid)).set({ 
                 allEntries: data.allEntries, 
-                currency: data.currentCurrency // Simpan currency terakhir yang dipilih
+                currency: data.currentCurrency
             });
         } catch (error) {
             console.error("Error saving data to Firebase:", error);
@@ -556,7 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- PERUBAHAN BESAR: FUNGSI RESET HANYA UNTUK MATA UANG AKTIF ---
     async function resetCurrentCurrencyData(uid) {
         if (!uid) return alert('Silakan login terlebih dahulu!');
         
@@ -572,13 +619,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (confirm2) {
             try {
-                // Hapus node specific mata uang
                 await database.ref(getDbPath(uid) + `/allEntries/${currentCurrency}`).remove();
                 
-                // Hapus juga dari data lokal
                 delete data.allEntries[currentCurrency];
                 
-                alert(`Data ${currentCurrency} berhasil direset. Semua data profit/loss untuk mata uang ini telah dihapus dari cloud.`);
+                alert(`Data ${currentCurrency} berhasil direset.`);
                 renderCalendar(); 
             } catch (error) {
                 console.error("Error deleting data from Firebase:", error);
@@ -588,6 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatCurrency(amount, currencyCode) {
+        // ... (Fungsi formatCurrency yang sama)
         const symbol = CURRENCY_SYMBOLS[currencyCode] || '$';
         const isLoss = amount < 0;
         const isProfit = amount > 0;
@@ -595,12 +641,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let displayAmount;
         
         if (currencyCode === 'IDR') {
-            // Untuk IDR, gunakan locale Indonesia dan TIDAK PERLU 2 desimal jika angka bulat
              const decimalOptions = { minimumFractionDigits: 0, maximumFractionDigits: 2 };
-             // Menggunakan 'id-ID' memastikan format ribuan pakai titik dan desimal pakai koma
              displayAmount = Math.abs(amount).toLocaleString('id-ID', decimalOptions); 
         } else {
-            // Untuk mata uang lain (USD, EUR, BTC), paksakan 2 desimal
             displayAmount = Math.abs(amount).toFixed(2);
         }
         
@@ -626,16 +669,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function togglePasswordVisibility() {
-        if (!passwordInput) return; 
-        const toggleIcon = document.getElementById('togglePassword');
-
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            if (toggleIcon) toggleIcon.innerHTML = '&#x1f440;'; 
+    function togglePasswordVisibility(inputEl, toggleIconEl) {
+        if (!inputEl) return; 
+        if (inputEl.type === 'password') {
+            inputEl.type = 'text';
+            if (toggleIconEl) toggleIconEl.innerHTML = '&#x1f440;'; 
         } else {
-            passwordInput.type = 'password';
-            if (toggleIcon) toggleIcon.innerHTML = '&#x1f441;'; 
+            inputEl.type = 'password';
+            if (toggleIconEl) toggleIconEl.innerHTML = '&#x1f441;'; 
         }
     }
     
@@ -658,6 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderWeekdayHeader() {
+        // ... (Fungsi renderWeekdayHeader yang sama)
         const weekdayHeader = document.getElementById('weekdayHeader');
         if (!weekdayHeader) return;
         weekdayHeader.innerHTML = ''; 
@@ -680,12 +722,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('monthLabel').textContent = new Date(viewYear,viewMonth,1).toLocaleString(userLocale, {month:'long'})+' '+viewYear;
     }
-
+    
+    // --- RENDER CALENDAR UNTUK DEMO/DATA ASLI ---
     function renderCalendar(){
       const grid = document.getElementById('calendarGrid'); 
       if(!grid) return; 
 
-      const currentEntries = getCurrentEntries(); // Gunakan entri untuk mata uang aktif
+      const currentEntries = getCurrentEntries(); 
       const currentCurrency = data.currentCurrency;
       
       grid.innerHTML='';
@@ -700,7 +743,6 @@ document.addEventListener('DOMContentLoaded', () => {
       for(let d=1;d<=daysInMonth;d++){
         const ymd = formatYMD(viewYear,viewMonth,d);
         
-        // Cek entri hanya di mata uang yang sedang aktif
         const entry = currentEntries[ymd] || { amount: 0, note: '' }; 
         const amt = entry.amount;
         const note = entry.note;
@@ -725,14 +767,21 @@ document.addEventListener('DOMContentLoaded', () => {
         grid.appendChild(cell);
       }
       updateSummary();
+      updateAuthStatusDisplay(); // Update display setelah rendering
     }
     
     function openEditor(ymd, amt, note) {
       if (!editorModal) return;
       editingYMD = ymd;
+      
+      // Jika belum login, beri peringatan di modal login
+      if (!currentUserId) {
+        openLoginModal("Anda harus **Login/Daftar** untuk dapat mengedit dan menyimpan data profit harian.");
+        return; 
+      }
+      
       editorTitle.textContent = `Edit Data ${ymd} (${data.currentCurrency})`; 
       
-      // Tampilkan angka mentah yang disimpan
       editorAmtInput.value = amt === 0 ? '' : String(amt); 
       editorNoteInput.value = note || ''; 
       editorModal.style.display = 'flex'; 
@@ -744,39 +793,33 @@ document.addEventListener('DOMContentLoaded', () => {
       editingYMD = null;
     }
     
-    // --- FUNGSI CLEAN & PARSE INPUT ANGKA (MENANGANI IDR) ---
     function parseInput(inputString, currency) {
+        // ... (Fungsi parseInput yang sama)
         let cleanString = inputString.trim();
 
         if (cleanString === '') {
             return 0;
         }
 
-        // Hapus semua karakter yang bukan angka, titik, koma, atau tanda minus
         cleanString = cleanString.replace(/[^\d,\.\-]/g, '');
 
         if (currency === 'IDR') {
-            // Logika IDR (titik = ribuan, koma = desimal)
-            // 1. Hapus SEMUA titik (pemisah ribuan)
             cleanString = cleanString.replace(/\./g, '');
-            // 2. Ganti koma (,) dengan titik (.) (pemisah desimal standar JS)
             cleanString = cleanString.replace(/,/g, '.');
         } else {
-            // Logika Non-IDR (titik = desimal, koma = desimal atau diabaikan)
-            // Ganti koma (,) dengan titik (.) untuk desimal
             cleanString = cleanString.replace(/,/g, '.');
         }
 
-        // Ambil nilai numerik
         const num = Number(cleanString);
         
         if (isNaN(num)) {
-            return null; // Mengembalikan null jika input tidak valid
+            return null;
         }
         return num;
     }
 
     function updateSummary(){
+        // ... (Fungsi updateSummary yang sama)
         const monthTotalEl = document.getElementById('monthTotal');
         const avgDayEl = document.getElementById('avgDay');
         const daysCountEl = document.getElementById('daysCount');
@@ -788,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
         let total=0,count=0;
         
-        for(const k in currentEntries){ // Hanya iterasi di mata uang aktif
+        for(const k in currentEntries){ 
             if(k.startsWith(monthKeyPrefix)){ 
                 const entry = currentEntries[k];
                 const amount = Number(entry.amount || 0); 
@@ -822,77 +865,124 @@ document.addEventListener('DOMContentLoaded', () => {
         quickAmt.placeholder = `Profit ${currentCurrency} (cth: 500.000 atau 10,50)`;
     }
     
-    // --- AUTENTIKASI ---
+    // --- MODIFIKASI AUTENTIKASI ---
     async function showApp(user){
-        if (loginCard) loginCard.style.display = 'none';
-        
-        // Sembunyikan semua elemen di luar app (termasuk deskripsi panjang)
-        const contentCards = document.querySelectorAll('body > .card');
-        contentCards.forEach(card => {
-            if (card.id !== 'loginCard') card.style.display = 'none';
-        });
-
-        if (app) app.style.display = 'block';
-        
         currentUserId = user.uid;
-        if (acctEmail) acctEmail.textContent = user.email;
-      
         data = await loadData(user.uid);
         if(currencySelect) currencySelect.value = data.currentCurrency; 
+        
+        // Sembunyikan tombol reset jika belum login (sudah dilakukan via CSS display: none di HTML)
+        if (resetDataBtn) resetDataBtn.style.display = 'block'; 
+        
         renderCalendar();
     }
-
-    const togglePasswordBtn = document.getElementById('togglePassword'); 
-    if (togglePasswordBtn) {
-        togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+    
+    function showDemo() {
+        currentUserId = null;
+        data = { currentCurrency: currencySelect ? currencySelect.value : 'IDR', allEntries: {} };
+        
+        // Sembunyikan tombol reset
+        if (resetDataBtn) resetDataBtn.style.display = 'none'; 
+        
+        renderCalendar();
     }
     
-    const loginBtn = document.getElementById('loginBtn');
-    if(loginBtn) loginBtn.addEventListener('click', async ()=>{
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      if(!email || password.length < 6){ alert('Masukkan email dan password minimal 6 karakter'); return; }
-      try {
-          await auth.signInWithEmailAndPassword(email, password);
-      } catch(error) {
-          alert("Login Gagal: " + error.message);
-      }
-    });
-
-    const registerBtn = document.getElementById('registerBtn');
-    if(registerBtn) registerBtn.addEventListener('click', async ()=>{
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      if(!email || password.length < 6){ alert('Masukkan email dan password minimal 6 karakter'); return; }
-      try {
-          await auth.createUserWithEmailAndPassword(email, password);
-          alert('Registrasi Berhasil! Anda sekarang login.');
-      } catch(error) {
-          alert("Registrasi Gagal: " + error.message);
-      }
-    });
-
-    const logoutBtn = document.getElementById('logoutBtn');
-    if(logoutBtn) logoutBtn.addEventListener('click',()=>{
-      auth.signOut();
+    // --- MODAL LOGIN HANDLERS ---
+    function openLoginModal(alertMessage = null) {
+        if (!loginRegisterModal) return;
+        loginRegisterModal.style.display = 'flex';
+        modalEmailInput.value = '';
+        modalPasswordInput.value = '';
+        
+        if (alertMessage) {
+            loginModalAlert.innerHTML = alertMessage;
+            loginModalAlert.style.display = 'block';
+        } else {
+            loginModalAlert.style.display = 'none';
+        }
+    }
+    
+    function closeLoginModal() {
+        if (loginRegisterModal) loginRegisterModal.style.display = 'none';
+    }
+    
+    document.getElementById('showAboutModalBtn').addEventListener('click', () => {
+        if(aboutModal) aboutModal.style.display = 'flex';
     });
     
+    document.getElementById('closeAboutModalBtn').addEventListener('click', () => {
+        if(aboutModal) aboutModal.style.display = 'none';
+    });
+
+    // Toggle Password di Modal Login
+    document.getElementById('toggleModalPassword').addEventListener('click', () => {
+        togglePasswordVisibility(modalPasswordInput, document.getElementById('toggleModalPassword'));
+    });
+    
+    // Login dan Register di Modal
+    document.getElementById('modalLoginBtn').addEventListener('click', async ()=>{
+      const email = modalEmailInput.value.trim();
+      const password = modalPasswordInput.value;
+      if(!email || password.length < 6){ loginModalAlert.innerHTML = "Masukkan email dan password minimal 6 karakter"; loginModalAlert.style.display = 'block'; return; }
+      try {
+          await auth.signInWithEmailAndPassword(email, password);
+          closeLoginModal();
+      } catch(error) {
+          loginModalAlert.innerHTML = "Login Gagal: " + error.message;
+          loginModalAlert.style.display = 'block';
+      }
+    });
+
+    document.getElementById('modalRegisterBtn').addEventListener('click', async ()=>{
+      const email = modalEmailInput.value.trim();
+      const password = modalPasswordInput.value;
+      if(!email || password.length < 6){ loginModalAlert.innerHTML = "Masukkan email dan password minimal 6 karakter"; loginModalAlert.style.display = 'block'; return; }
+      try {
+          await auth.createUserWithEmailAndPassword(email, password);
+          closeLoginModal();
+      } catch(error) {
+          loginModalAlert.innerHTML = "Registrasi Gagal: " + error.message;
+          loginModalAlert.style.display = 'block';
+      }
+    });
+    
+    document.getElementById('closeLoginModalBtn').addEventListener('click', closeLoginModal);
+    
+    // --- FUNGSI BARU: MENGUPDATE STATUS LOGIN DI HEADER ---
+    function updateAuthStatusDisplay() {
+        if (!authStatusContainer) return;
+
+        if (currentUserId) {
+            // Sudah Login
+            authStatusContainer.innerHTML = `
+                <div class="card small">Akun: <strong id="acctEmail">${auth.currentUser.email}</strong></div>
+                <button class="btn ghost" id="logoutBtn" style="margin-top:0;">Logout</button>
+            `;
+            document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
+            // Tampilkan tombol reset data
+            if (resetDataBtn) resetDataBtn.style.display = 'block'; 
+        } else {
+            // Belum Login (Demo)
+            authStatusContainer.innerHTML = `
+                <div class="login-alert">Login/Daftar untuk Menyimpan Data Anda</div>
+                <button class="btn" id="showLoginBtn" style="margin-top:0;">Login / Daftar</button>
+            `;
+            document.getElementById('showLoginBtn').addEventListener('click', () => {
+                openLoginModal();
+            });
+            // Sembunyikan tombol reset data
+            if (resetDataBtn) resetDataBtn.style.display = 'none';
+        }
+    }
+
+    // --- LISTENER PERUBAHAN STATUS FIREBASE ---
     auth.onAuthStateChanged((user) => {
       if (user) {
-          showApp(user);
+          showApp(user); // Ambil data dan tampilkan
       } else {
-          if (loginCard) loginCard.style.display = 'block';
-          
-          // Tampilkan kembali elemen di luar app (termasuk deskripsi panjang)
-          const contentCards = document.querySelectorAll('body > .card');
-          contentCards.forEach(card => {
-               if (card.id !== 'loginCard' && card.parentElement.id !== 'app') card.style.display = 'block';
-          });
-          
-          if (app) app.style.display = 'none';
-          currentUserId = null;
-          renderWeekdayHeader(); 
+          showDemo(); // Tampilkan kalender kosong (mode demo)
       }
+      updateAuthStatusDisplay(); // Pastikan status di header diperbarui
     });
 
     // --- NAVIGASI DAN QUICK SAVE ---
@@ -905,9 +995,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayBtn = document.getElementById('todayBtn');
     if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
 
-    const quickSave = document.getElementById('quickSave');
+    // --- LOGIKA SAVE DENGAN LOGIN CHECK ---
     if(quickSave) quickSave.addEventListener('click', async ()=>{
-      if(!currentUserId) return alert('Silakan login terlebih dahulu!'); 
+      // PERIKSA LOGIN SEBELUM MENYIMPAN
+      if(!currentUserId) {
+          openLoginModal("Anda harus **Login/Daftar** untuk dapat menyimpan data yang Anda masukkan."); 
+          return; 
+      }
+      
       if(!quickDate) return; 
       const d = quickDate.value;
       const a = quickAmt.value;
@@ -918,12 +1013,10 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if(num === null){ alert(`Masukkan angka profit yang valid untuk ${currentCurrency}! (Contoh: 500.000 atau 10,50)`); return; }
       
-      // Pastikan array untuk mata uang ini ada
       if (!data.allEntries[currentCurrency]) {
           data.allEntries[currentCurrency] = {};
       }
 
-      // Simpan data di bawah mata uang aktif
       data.allEntries[currentCurrency][d] = { amount: num, note: '' }; 
       
       await saveData(currentUserId); 
@@ -932,9 +1025,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // --- EDITOR MODAL HANDLERS ---
-    const saveEditorBtn = document.getElementById('saveEditorBtn');
     if(saveEditorBtn) saveEditorBtn.addEventListener('click', async () => {
-      if (!editingYMD || !currentUserId) return; 
+      // PERIKSA LOGIN SEBELUM MENYIMPAN
+      if (!currentUserId) {
+          openLoginModal("Anda harus **Login/Daftar** untuk dapat menyimpan perubahan pada data ini."); 
+          return; 
+      }
+      
+      if (!editingYMD) return; 
       const n = editorAmtInput.value.trim();
       const noteText = editorNoteInput.value.trim(); 
       const currentCurrency = data.currentCurrency;
@@ -942,13 +1040,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const num = parseInput(n, currentCurrency);
 
       if (num === null) {
-          alert(`Masukkan angka profit yang valid untuk ${currentCurrency}! (Contoh: 500.000 atau 10,50)`);
+          alert(`Masukkan angka profit yang valid untuk ${currentCurrency}!`);
           return;
       }
       
       const finalNum = num; 
       
-      // Pastikan array untuk mata uang ini ada
       if (!data.allEntries[currentCurrency]) {
           data.allEntries[currentCurrency] = {};
       }
@@ -967,9 +1064,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeEditorBtn = document.getElementById('closeEditorBtn');
     if(closeEditorBtn) closeEditorBtn.addEventListener('click', closeEditor);
     
-    const deleteEditorBtn = document.getElementById('deleteEditorBtn');
     if(deleteEditorBtn) deleteEditorBtn.addEventListener('click', async () => {
-      if(!currentUserId) return; 
+      // PERIKSA LOGIN SEBELUM MENGHAPUS
+      if(!currentUserId) {
+          openLoginModal("Anda harus **Login/Daftar** untuk menghapus data dari Cloud Anda."); 
+          return; 
+      }
+      
       const currentCurrency = data.currentCurrency;
       if(confirm(`Yakin hapus data hari ${editingYMD} (${currentCurrency})? (Profit & Catatan)`)){
           delete data.allEntries[currentCurrency][editingYMD];
@@ -979,17 +1080,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     
-    // --- HANDLER BARU: RESET DATA MATA UANG AKTIF ---
+    // --- HANDLER: RESET DATA MATA UANG AKTIF ---
     if(resetDataBtn) resetDataBtn.addEventListener('click', () => {
         resetCurrentCurrencyData(currentUserId);
     });
 
     // --- CURRENCY CHANGE ---
     if(currencySelect) currencySelect.addEventListener('change', async (e) => {
-        data.currentCurrency = e.target.value; // Simpan currency yang dipilih
+        data.currentCurrency = e.target.value; 
         renderCalendar();
         
-        // Simpan perubahan currency ke Firebase agar bisa di-load saat login berikutnya
+        // Simpan currency yang dipilih HANYA JIKA SUDAH LOGIN
         if (currentUserId) {
             await database.ref(getDbPath(currentUserId) + '/currency').set(data.currentCurrency);
         }
@@ -998,34 +1099,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EXPORT CSV DENGAN SEMUA MATA UANG ---
     const exportCsv = document.getElementById('exportCsv');
     if(exportCsv) exportCsv.addEventListener('click', ()=>{
+        // ... (Fungsi exportCsv yang sama)
         const rows=[['date','profit_amount', 'currency', 'note']]; 
         let totalProfitPerCurrency = {};
         
-        // Iterasi melalui semua mata uang yang ada di data
         for (const currency in data.allEntries) {
             const currencyEntries = data.allEntries[currency];
             
-            // Sortir tanggal dan masukkan ke CSV
             for(const k of Object.keys(currencyEntries).sort()) {
                 const entry = currencyEntries[k];
                 const amount = entry.amount || 0;
-                // Bersihkan koma dan baris baru di catatan agar tidak merusak format CSV
                 const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); 
                 
                 rows.push([k, String(amount), currency, note]); 
                 
-                // Hitung total
                 totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
             }
         }
         
-        // Tambahkan baris total
         rows.push(['---', '---', '---', '---']); 
         for (const currency of Object.keys(totalProfitPerCurrency).sort()) {
             const total = totalProfitPerCurrency[currency];
             const totalLabel = (total < 0) ? `Total Loss (${currency})` : `Total Profit (${currency})`;
-            // Format total untuk display yang benar (menggunakan toFixed(2) atau formatCurrency)
-            const displayTotal = total.toFixed(2); // menggunakan 2 desimal di CSV untuk konsistensi
+            const displayTotal = total.toFixed(2);
             rows.push([totalLabel, String(displayTotal), currency, '']);
         }
         
@@ -1033,13 +1129,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const blob=new Blob([csv],{type:'text/csv'});
         const url=URL.createObjectURL(blob);
         
-        // Nama file
         const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_multi_currency_export.csv`; a.click(); URL.revokeObjectURL(url);
     });
 
     if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
     
-    renderWeekdayHeader(); 
+    renderCalendar(); 
 });
 </script>
 </body>
