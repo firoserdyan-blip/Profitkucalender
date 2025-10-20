@@ -24,1118 +24,799 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 
 <style>
-/* 🎨 KODE CSS FINAL */
-:root{
-    --bg:#f6f8fb;
-    --card:#ffffff;
-    --text:#0f172a;
-    --muted:#6b7280;
-    --accent:#2563eb;
-    --green:#16a34a; 
-    --red:#dc2626; 
-    --input-bg:#ffffff;
-    --input-border:rgba(15,23,42,0.12);
-    --shadow:0 6px 18px rgba(15,23,42,0.06);
-    --grid-bg:linear-gradient(180deg,#fff,#fbfdff);
+/* --- BASE STYLE & THEMING (LAMA) --- */
+body { font-family: sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s, color 0.3s; }
+:root {
+    --bg-color: #f4f6f9; /* Light mode background */
+    --text-color: #333; /* Light mode text */
+    --primary-color: #007bff; /* Blue */
+    --success-color: #28a745; /* Green */
+    --danger-color: #dc3545; /* Red */
+    --card-bg: #fff;
+    --border-color: #ddd;
+    --header-bg: #f8f9fa;
+    --day-bg: #fff;
+    --day-hover-bg: #e9ecef;
 }
 [data-theme="dark"] {
-    --bg:#1f2937;
-    --card:#374151;
-    --text:#f9fafb;
-    --muted:#9ca3af;
-    --accent:#60a5fa;
-    --green:#4ade80; 
-    --red:#f87171; 
-    --input-bg:#4b5563;
-    --input-border:rgba(255,255,255,0.15);
-    --shadow:0 6px 18px rgba(0,0,0,0.3);
-    --grid-bg:#374151; 
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --primary-color: #4a90e2; 
+    --success-color: #4CAF50;
+    --danger-color: #f44336;
+    --card-bg: #1e1e1e;
+    --border-color: #333;
+    --header-bg: #222;
+    --day-bg: #1e1e1e;
+    --day-hover-bg: #333;
+}
+.container { max-width: 900px; margin: 0 auto; padding: 20px 10px; }
+.header { text-align: center; margin-bottom: 20px; background-color: var(--header-bg); padding: 15px 0; border-bottom: 1px solid var(--border-color); }
+.header h1 { margin: 0; font-size: 1.8em; color: var(--primary-color); }
+.calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; border: 1px solid var(--border-color); padding: 5px; border-radius: 8px; background-color: var(--card-bg); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.day-header { text-align: center; padding: 10px 0; font-weight: bold; background-color: var(--primary-color); color: white; border-radius: 4px 4px 0 0; }
+.day { position: relative; min-height: 80px; padding: 8px; border: 1px solid var(--border-color); cursor: pointer; border-radius: 4px; background-color: var(--day-bg); transition: background-color 0.2s; }
+.day:hover { background-color: var(--day-hover-bg); }
+.day.empty { background-color: transparent; border: none; cursor: default; }
+.day-number { font-size: 1.1em; font-weight: bold; margin-bottom: 5px; }
+.profit-indicator { font-size: 0.9em; margin-top: 5px; font-weight: 500; }
+.profit { color: var(--success-color); }
+.loss { color: var(--danger-color); }
+.neutral { color: var(--text-color); opacity: 0.7; }
+.nav-buttons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.nav-buttons h2 { margin: 0; font-size: 1.5em; }
+.btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: #0056b3; }
+.btn-danger { background-color: var(--danger-color); color: white; }
+.btn-danger:hover { background-color: #c82333; }
+.btn-secondary { background-color: #6c757d; color: white; }
+.btn-secondary:hover { background-color: #5a6268; }
+.btn-success { background-color: var(--success-color); color: white; }
+.btn-success:hover { background-color: #1e7e34; }
+.summary { background-color: var(--card-bg); padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--border-color); }
+.summary h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
+
+/* Modal Styling */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+.modal-header h4 { margin: 0; color: var(--primary-color); }
+.close-btn { font-size: 1.5em; font-weight: bold; cursor: pointer; border: none; background: none; color: var(--text-color); }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; background-color: var(--day-bg); color: var(--text-color); }
+.modal-footer { margin-top: 20px; display: flex; justify-content: space-between; }
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .calendar { grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .day { min-height: 60px; padding: 5px; }
+    .day-number { font-size: 0.9em; }
+    .profit-indicator { font-size: 0.75em; }
+    .header h1 { font-size: 1.4em; }
 }
 
-*{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-body{margin:0;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:15px;transition:background 0.3s, color 0.3s;}
-.card{background:var(--card);padding:20px;border-radius:12px;box-shadow:var(--shadow);width:100%;max-width:400px;transition:background 0.3s, box-shadow 0.3s;}
+/* --- PROFESIONAL STYLE REVISI --- */
+.prof-header-alert { background-color: var(--danger-color); color: white; padding: 10px 15px; text-align: center; font-weight: bold; margin-bottom: 15px; border-radius: 4px; }
+.auth-status { display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 0.9em; margin-top: 5px; }
+.auth-status .btn { padding: 5px 10px; }
+.footer { text-align: center; padding: 20px 0; border-top: 1px solid var(--border-color); margin-top: 40px; }
+.footer-text { font-size: 0.8em; margin-top: 10px; color: var(--text-color); opacity: 0.7; }
 
-/* --- CSS LOGO HEADER UTAMA --- */
-.header-logo-group {
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-}
-.header-logo-img {
-    width: 36px; 
-    height: 36px;
-    border-radius: 6px; 
-    flex-shrink: 0; 
-}
-.header-logo-group h1 {
-    margin: 0; 
-    text-align: left; 
-    font-size: 24px; 
-}
-h1{margin-top:0;text-align:center;color:var(--text);} 
-/* ------------------------------------------------ */
+/* Theme Toggle */
+.theme-toggle { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.5em; }
 
-
-input[type="email"]{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid var(--input-border);box-sizing: border-box;background:var(--input-bg);color:var(--text);}
-
-.password-container{position: relative;margin-top: 10px;}
-.password-container input[type="password"], 
-.password-container input[type="text"] { 
-    width:100%;padding:10px 40px 10px 10px;border-radius:8px;border:1px solid var(--input-border);box-sizing: border-box;margin-top: 0;
-    background:var(--input-bg);color:var(--text);
-}
-.password-toggle{position: absolute;right: 10px;top: 50%;transform: translateY(-50%);cursor: pointer;color: var(--muted);font-size: 18px;user-select: none;z-index: 10;}
-
-button{width:100%;padding:10px;margin-top:14px;background:var(--accent);color:white;border:0;border-radius:8px;cursor:pointer;transition:background 0.2s;}
-button:hover{filter:brightness(1.1);}
-
-/* MODIFIKASI WRAP AGAR SELALU TERLIHAT */
-.wrap{max-width:980px;margin:28px auto;padding:0 15px;width:100%;} 
-
-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:0 5px;}
-
-/* KONTROL HEADER BARU */
-.controls{display:flex;gap:8px;align-items:center; flex-wrap: wrap;} 
-.login-status-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-/* STYLE BARU UNTUK PERINGATAN MERAH */
-.login-alert {
-    color: var(--red);
+/* Profile/Logout Button */
+#authInfo {
+    margin: 0;
     font-weight: 600;
-    font-size: 14px;
-    line-height: 1.2;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid rgba(220, 38, 38, 0.2);
-    background: rgba(220, 38, 38, 0.05);
-    text-align: right;
 }
-[data-theme="dark"] .login-alert {
-    background: rgba(220, 38, 38, 0.2);
-}
-/* --------------------------------- */
-
-.calendar{
-    margin-top:18px;display:flex;flex-direction:column;align-items:center;padding: 0 20px; box-sizing: border-box;width: 100%; 
-}
-.cal-header{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:700px;flex-wrap:wrap;gap:10px;margin-bottom: 10px;}
-.grid{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:4px;
-    width:100%;
-} 
-.day{
-    min-height: 55px; padding: 2px; border-radius: 8px;border: 1px solid rgba(15,23,42,0.04);
-    background: var(--grid-bg);text-align: center;display: flex; 
-    flex-direction: column;justify-content: center;align-items: center;font-size: 10px; 
-    line-height: 1.1;cursor: pointer;overflow: hidden;white-space: normal;
-    position: relative;
-    transition: background 0.3s;
-}
-[data-theme="dark"] .day {
-    border: 1px solid rgba(255,255,255,0.08); 
-}
-.day .date{font-size:10px;color:var(--muted)}
-
-.day .note-indicator {
+.prof-header-right {
     position: absolute;
-    top: 2px;
-    right: 2px;
-    font-size: 8px;
-    color: var(--accent);
-}
-
-.amount{margin-top:1px;font-weight:600;font-size:11px;white-space: nowrap; color: var(--text);} 
-.amount.loss { color: var(--red); } 
-.amount.profit { color: var(--green); } 
-
-.today{box-shadow:0 0 0 2px var(--accent);border:1px solid rgba(37,99,235,0.2);}
-
-.summary{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center;width:100%;max-width:700px;}
-.stat{
-    flex:1;min-width:110px;background:var(--grid-bg);padding:10px; 
-    border-radius:10px;text-align:center;box-shadow:0 2px 4px rgba(15,23,42,0.03);
-    display: flex;flex-direction: column;justify-content: space-between; 
-    transition: background 0.3s, box-shadow 0.3s;
-}
-[data-theme="dark"] .stat {
-    box-shadow:0 2px 4px rgba(0,0,0,0.2);
-}
-.stat .value-display.loss {color: var(--red);} 
-.stat .value-display.profit {color: var(--green);} 
-
-.quick-action-bar{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;max-width:700px;}
-input[type=date], select, input[type=text]{ 
-    width:auto;padding:8px;border-radius:6px;border:1px solid var(--input-border);flex:1;
-    background:var(--input-bg);color:var(--text); transition: background 0.3s, color 0.3s, border-color 0.3s;
-}
-#quickSave{width:auto;flex:none;margin-top:0;}
-
-/* PERUBAHAN FOOTER */
-.main-footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;width:100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--input-border); gap: 10px;}
-.main-footer .footer-note { flex-grow: 1; text-align: left; }
-.main-footer .footer-btn { flex-shrink: 0; margin: 0; }
-/* -------------------- */
-
-.actions{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    justify-content:flex-end;
-    margin-top:0;
-}
-.btn{background:var(--accent);color:white;padding:8px 10px;border-radius:8px;border:0;cursor:pointer;white-space:nowrap; width: auto !important;}
-.btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
-.btn.danger{background:#dc2626; color:white; padding:8px 10px; border-radius:8px; border:0; cursor:pointer;} 
-
-/* CSS untuk Modal (Editor, Login, About) */
-.modal-overlay {
-    position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); 
-    z-index:1000; align-items:center; justify-content:center;
-    display: none; 
-    padding: 15px;
-}
-[data-theme="dark"] .modal-overlay {
-    background:rgba(0,0,0,0.8);
-}
-.modal-content-container {
-    max-width: 300px;
-    padding: 20px;
-    background: var(--card);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    width: 100%;
-    max-height: 90vh; 
-    overflow-y: auto; 
-}
-.modal-content-container h3, .modal-content-container h4 {
-    color: var(--accent);
-}
-.modal-content-container .logo-container {
-    text-align: center;
-    margin-bottom: 20px;
-}
-.modal-content-container .logo-container img {
-    max-width: 80px; 
-    height: auto;
-    display: block;
-    margin: 0 auto 10px; 
-}
-
-textarea {
-    width: 100%;
-    padding: 8px;
-    margin-top: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--input-border);
-    background: var(--input-bg);
-    color: var(--text);
-    resize: vertical;
-    min-height: 80px;
-    box-sizing: border-box; 
-}
-
-.theme-toggle {
-    display: inline-flex;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 10px;
     align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    background: var(--card);
-    cursor: pointer;
-    font-size: 14px;
-    border: 1px solid var(--input-border);
-    color: var(--text);
-    transition: background 0.3s;
-    width: auto;
-    max-width: 110px; 
-    justify-content: center;
-}
-.theme-toggle .icon {
-    font-size: 16px;
-}
-
-@media (max-width: 500px){
-    .calendar {margin-left: 0; right: 0; width: 100%;padding: 0 0;}
-    .day {min-height: 50px;}
-    
-    header {
-        flex-direction: row; 
-        align-items: center; 
-        justify-content: space-between;
-    }
-    
-    .header-logo-group h1 {
-        font-size: 20px;
-    }
-    .header-logo-img {
-        width: 30px;
-        height: 30px;
-    }
-    
-    .controls {width: auto; justify-content: flex-end;}
-    .login-status-group { flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
-    .login-alert { text-align: center; width: 100%; }
-    
-    .summary {max-width: none;}
-    .stat {min-width: 100%;}
-    .quick-action-bar input, .quick-action-bar button, .quick-action-bar select {flex: 1 1 45%;}
-    #quickSave {flex: 1 1 100%; margin-top: 5px;}
-    
-    .cal-header .actions {
-        display: grid; 
-        grid-template-columns: 1fr 1fr; 
-        width: 100%;
-        gap: 8px; 
-        margin-top: 8px; 
-        justify-content: space-between;
-    }
-    .cal-header .actions > * {
-        margin-top: 0 !important; 
-        width: 100% !important; 
-        box-sizing: border-box;
-    }
-    .cal-header .actions #resetDataBtn {
-        grid-column: span 2; 
-    }
-    
-    #weekdayHeader .muted.small {
-        font-size: 10px; 
-        font-weight: 600; 
-    }
-    
-    .main-footer {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    .main-footer .footer-note { text-align: center; }
 }
 </style>
 </head>
+
 <body>
-<div class="wrap" id="app">
-    <header>
-        <div class="header-logo-group">
-            <img src="logo.png" alt="ProfitKu" class="header-logo-img" /> <div>
-                <h1>Profit Calendar</h1>
-                <div class="muted small">Aplikasi Gratis untuk Trader & Investor</div>
+<div class="container">
+    
+    <div class="prof-header-alert" id="authStatusAlert">
+        Anda berada di **Mode Demo** (data tidak disimpan permanen). Silakan <a href="#" onclick="showLoginModal()" style="color: yellow; text-decoration: underline;">**LOGIN/DAFTAR**</a> untuk menyimpan data Anda!
+    </div>
+
+    <div class="header">
+        <h1>ProfitKu: Kalender Profit Trading</h1>
+        <div class="prof-header-right">
+            <span id="authInfo">Guest Mode</span>
+            <div class="theme-toggle" onclick="toggleTheme()">☀️</div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="btn btn-primary" onclick="prevMonth()">← Bulan Sebelumnya</button>
+        <h2 id="currentMonthYear"></h2>
+        <button class="btn btn-primary" onclick="nextMonth()">Bulan Berikutnya →</button>
+    </div>
+
+    <div class="calendar" id="calendar">
+        </div>
+
+    <div class="summary" id="summary">
+        <h3>Ringkasan Profit Bulan Ini</h3>
+        <div id="summaryContent"></div>
+    </div>
+    
+    <div class="summary" id="exportSection">
+        <h3>Ekspor & Opsi</h3>
+        <button class="btn btn-secondary" id="exportBtn">Ekspor ke CSV</button>
+        <button class="btn btn-danger" onclick="clearAllData()">Hapus Semua Data (Lokal)</button>
+    </div>
+
+    <div id="dataModal" class="modal" onclick="closeModal(event, 'dataModal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="modalTitle">Input Profit/Loss untuk </h4>
+                <button class="close-btn" onclick="closeModal(null, 'dataModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="dataForm">
+                    <div class="form-group">
+                        <label for="inputAmount">Profit/Loss (cth: 10.50 atau -5.20):</label>
+                        <input type="number" step="0.01" id="inputAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputCurrency">Mata Uang:</label>
+                        <select id="inputCurrency" required>
+                            <option value="USD">USD</option>
+                            <option value="IDR">IDR</option>
+                            <option value="EUR">EUR</option>
+                            <option value="JPY">JPY</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputNote">Catatan/Jurnal Trading:</label>
+                        <textarea id="inputNote" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                         <label for="quickDate">Tanggal:</label>
+                         <input type="date" id="quickDate">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="deleteEntryBtn" style="display:none;">Hapus</button>
+                <button class="btn btn-success" id="saveDataBtn">Simpan Data</button>
             </div>
         </div>
-        
-        <div class="controls">
-            <div id="authStatusContainer" class="login-status-group">
+    </div>
+    
+    <div id="authModal" class="modal" onclick="closeModal(event, 'authModal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="authModalTitle">Login atau Daftar</h4>
+                <button class="close-btn" onclick="closeModal(null, 'authModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" placeholder="Email Anda" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" placeholder="Password Anda" required>
+                    </div>
+                    <div class="modal-footer" style="justify-content: flex-end; padding: 0;">
+                        <button class="btn btn-success" onclick="loginUser()">Login</button>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">Belum punya akun? <a href="#" onclick="showRegisterForm()">Daftar di sini.</a></p>
                 </div>
-        </div>
-    </header>
-    <div class="card calendar">
-        <div class="cal-header" style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:700px;flex-wrap:wrap;gap:10px">
-            
-            <div style="display:flex;align-items:center;gap:12px">
-                <button class="nav-btn" id="prev">◀</button>
-                <div style="font-weight:600" id="monthLabel">—</div>
-                <button class="nav-btn" id="next">▶</button>
-            </div>
 
-            <div class="actions">
-                <div class="theme-toggle" id="themeToggle" style="margin-top:0;">
-                    <span class="icon">☀️</span> <span id="themeLabel">Terang</span>
+                <div id="registerForm" class="auth-form" style="display:none;">
+                    <div class="form-group">
+                        <label for="registerEmail">Email:</label>
+                        <input type="email" id="registerEmail" placeholder="Email Anda" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password:</label>
+                        <input type="password" id="registerPassword" placeholder="Minimal 6 karakter" required>
+                    </div>
+                    <div class="modal-footer" style="justify-content: flex-end; padding: 0;">
+                        <button class="btn btn-success" onclick="registerUser()">Daftar</button>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">Sudah punya akun? <a href="#" onclick="showLoginForm()">Login di sini.</a></p>
                 </div>
-                <select id="currencySelect" style="margin-top:0; max-width: 100px;">
-                    <option value="IDR">IDR (Rp)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="JPY">JPY (¥)</option>
-                    <option value="BTC">BTC (₿)</option>
-                </select>
-                <button class="btn" id="todayBtn" style="margin-top:0;">Hari Ini</button>
-                <button class="btn export" id="exportCsv" style="margin-top:0;">Export CSV</button>
-                <button class="btn danger" id="resetDataBtn" style="margin-top:0; background-color: var(--red); display: none;">Reset Data Mata Uang Aktif</button> 
+                
+                <p id="authError" style="color: var(--danger-color); text-align: center; margin-top: 10px;"></p>
             </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <button class="btn btn-secondary" onclick="showAboutModal()">Tentang Website & Fitur</button>
+        <div class="footer-text">
+            &copy; 2025 ProfitKu | Aplikasi Kalender Profit Trading Harian Gratis
+        </div>
+    </div>
+</div>
+
+<div id="aboutModal" class="modal" onclick="closeModal(event, 'aboutModal')">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h4>Tentang ProfitKu & Fitur Utama</h4>
+            <button class="close-btn" onclick="closeModal(null, 'aboutModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong>ProfitKu</strong> adalah aplikasi web kalkulator dan kalender profit trading harian gratis yang dirancang khusus untuk para trader dan investor. Kami menghilangkan kerumitan spreadsheet dan Excel dengan menyediakan antarmuka yang bersih dan interaktif.</p>
             
-        </div>
-        
-        <div class="grid" id="weekdayHeader">
-        </div>
-        
-        <div class="grid" id="calendarGrid"></div>
-        <div class="summary">
-            <div class="stat">
-                <div class="small muted">Total (month)</div>
-                <div style="font-size:18px" id="monthTotal" class="value-display">$0</div>
-            </div>
-            <div class="stat">
-                <div class="small muted">Avg per hari data</div>
-                <div style="font-size:18px" id="avgDay" class="value-display">$0</div>
-            </div>
-            <div class="stat">
-                <div style="font-size:13px" class="small muted"># Days Recorded</div>
-                <div style="font-size:18px" id="daysCount">0</div>
-            </div>
-        </div>
-        
-        <div class="quick-action-bar">
-            <input type="date" id="quickDate" />
-            <input type="text" id="quickAmt" inputmode="decimal" placeholder="Profit (boleh negatif, cth: 500.000 atau 10,50)" /> 
-            <button class="btn" id="quickSave">Simpan</button>
-        </div>
-        
-        <div class="main-footer">
-            <div class="footer-note">Data yang dimasukkan saat demo (belum login) tidak akan tersimpan.</div>
-            <button class="btn ghost footer-btn" id="showAboutModalBtn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Tentang Website & Fitur</button>
-        </div>
-        </div>
-</div>
+            <p><strong>Fitur Utama:</strong></p>
+            <ul>
+                <li><strong>Kalender Interaktif (Live):</strong> Catat profit atau kerugian (Loss) Anda per hari langsung di kalender.</li>
+                <li><strong>Input Multi Mata Uang:</strong> Mendukung USD, IDR, EUR, JPY, GBP, dan mata uang lainnya.</li>
+                <li><strong>Jurnal Trading Detail:</strong> Tambahkan catatan mendalam pada setiap entri profit/loss Anda (contoh: mengapa Anda masuk, apa yang salah/benar).</li>
+                <li><strong>Ringkasan Otomatis:</strong> Kalkulasi profit/loss bulanan dan total otomatis.</li>
+                <li><strong>Ekspor Data (CSV):</strong> Ekspor seluruh data profit/loss Anda untuk dianalisis lebih lanjut.</li>
+                <li><strong>Penyimpanan Cloud Aman (Hanya Akun Terdaftar):</strong> Data Anda disimpan aman di database cloud (Firebase) dan hanya dapat diakses melalui akun Anda.</li>
+            </ul>
 
-<div id="editorModal" style="display:none;" class="modal-overlay">
-    <div class="modal-content-container">
-        <h3 id="editorTitle">Edit Data</h3>
-        
-        <div style="margin-bottom: 15px;">
-            <div class="muted small" style="margin-bottom: 5px;">Jumlah Profit / Loss:</div>
-            <input type="text" id="editorAmt" inputmode="decimal" placeholder="Profit (cth: 500.000 atau 10,50)" style="width: 100%;">
+            <p style="margin-top: 20px; font-size: 0.9em; color: var(--text-color); opacity: 0.8;">**Penting:** Saat ini Anda berada di Mode Demo. Data yang Anda masukkan hanya tersimpan di *browser* ini. Untuk menggunakan fitur penyimpanan cloud, riwayat permanen, dan akses multi-perangkat, silakan *Login* atau *Daftar* akun baru secara gratis.</p>
         </div>
-        
-        <div style="margin-bottom: 15px;">
-            <div class="muted small" style="margin-bottom: 5px;">Catatan/Deskripsi Harian:</div>
-            <textarea id="editorNote" placeholder="Tulis catatan harian (misal: 'Profit dari investasi saham A' atau 'Loss karena entry telat')"></textarea>
-        </div>
-        
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn ghost" id="closeEditorBtn" style="flex:1; margin-top:0;">Batal</button>
-            <button class="btn" id="saveEditorBtn" style="flex:1; margin-top:0;">Simpan</button>
-        </div>
-        <button class="btn ghost" id="deleteEditorBtn" style="background:transparent; color:#dc2626; border:1px solid rgba(220,38,38,0.3); margin-top:10px;">Hapus Data</button>
     </div>
 </div>
-<div id="loginRegisterModal" style="display:none;" class="modal-overlay">
-    <div class="modal-content-container" id="loginModalContent">
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo ProfitKu" /> <h3>Login atau Daftar Akun</h3>
-        </div>
-        
-        <p id="loginModalAlert" style="color: var(--red); font-size: 0.9em; text-align: center; display: none;">
-            <strong style="font-weight: 700;">PERINGATAN!</strong> Anda harus Login/Daftar untuk menyimpan data ke Cloud.
-        </p>
 
-        <input type="email" id="modalEmail" placeholder="Email" />
-        
-        <div class="password-container">
-            <input type="password" id="modalPassword" placeholder="Password (min 6 karakter)" />
-            <span class="password-toggle" id="toggleModalPassword">&#x1f441;</span> 
-        </div>
-        
-        <button id="modalLoginBtn">Login</button>
-        <button class="btn ghost" id="modalRegisterBtn" style="margin-top: 8px;">Daftar Akun Baru</button>
 
-        <button class="btn ghost" id="closeLoginModalBtn" style="margin-top: 20px; color: var(--muted);">Kembali ke Kalender</button>
-    </div>
-</div>
-<div id="aboutModal" style="display:none;" class="modal-overlay">
-    <div class="modal-content-container" style="max-width: 600px;">
-        <h3 style="margin-top: 0; color: var(--accent);">ProfitKu: Aplikasi Kalender Profit & Loss Harian</h3>
-        
-        <p style="font-size: 14px; color: var(--text);">Selamat datang di ProfitKu, aplikasi web (Single Page Application) yang dirancang untuk membantu trader, investor, dan pelaku bisnis online melacak riwayat keuangan harian mereka dengan mudah. Kami mengatasi masalah lupa mencatat profit/loss harian dari berbagai sumber seperti trading saham, crypto, forex, atau bisnis online dengan sistem kalender yang efisien. Data Anda disimpan aman dan pribadi di cloud (Firebase) dan hanya dapat diakses melalui login akun Anda. Kami menjamin kerahasiaan data Anda.</p>
-
-        <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">Fitur Utama ProfitKu:</h4>
-        <ul style="font-size: 14px; color: var(--muted); padding-left: 20px; margin-top: 5px; list-style-type: square;">
-            <li>✅ **Pencatatan Harian:** Masukkan jumlah profit atau kerugian (bisa negatif) untuk setiap hari.</li>
-            <li>✅ **Dukungan Multi-Mata Uang:** Catat profit dalam IDR, USD, EUR, JPY, hingga Bitcoin (₿).</li>
-            <li>✅ **Ringkasan Otomatis:** Dapatkan total profit bulanan dan rata-rata profit per hari secara otomatis.</li>
-            <li>✅ **Catatan Harian:** Tambahkan deskripsi singkat pada setiap entri kalender (misal: "Profit dari BTC/IDR" atau "Loss karena telat *cut loss*").</li>
-            <li>✅ **Ekspor Data:** Export semua data profit Anda ke file CSV kapan saja untuk analisis lebih lanjut.</li>
-            <li>✅ **Data Aman:** Dilindungi oleh sistem login Firebase Google yang terpercaya.</li>
-        </ul>
-
-        <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">FAQ (Pertanyaan Umum)</h4>
-        <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah data saya aman?**</p>
-        <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya. Semua data dienkripsi dan disimpan di database pribadi Anda di Firebase. Kami tidak membagikan data riwayat profit/loss Anda kepada pihak ketiga. Keamanan akun dijamin oleh Firebase Authentication.</p>
-        
-        <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah aplikasi ini gratis?**</p>
-        <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya, ProfitKu sepenuhnya gratis. Kami berupaya menjaga kualitas layanan dan akan menggunakan AdSense untuk menutupi biaya server (hosting) dan pemeliharaan aplikasi yang digunakan untuk menyimpan data Anda.</p>
-        
-        <button class="btn" id="closeAboutModalBtn" style="margin-top: 20px; width: 100%;">Tutup</button>
-    </div>
-</div>
 <script>
-// SELURUH KODE JAVASCRIPT ANDA DIBAWAH INI TELAH DIUBAH TOTAL UNTUK MENDUKUNG MODAL DAN DEMO
-document.addEventListener('DOMContentLoaded', () => {
-    // 🔑 KONFIGURASI FIREBASE (TIDAK BERUBAH)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDIRmr2lJWqmoeoZHYIpakc8N_11JQ1Mo8",
-      authDomain: "profitku-a5f3a.firebaseapp.com",
-      databaseURL: "https://profitku-a5f3a-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "profitku-a5f3a",
-      storageBucket: "profitku-a5f3a.firebasestorage.app",
-      messagingSenderId: "222392994535",
-      appId: "1:222392994535:web:a8e13f3238dedaae367042",
-      measurementId: "G-LZ7ZQJC86F"
-    };
+// --- KONFIGURASI FIREBASE ---
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY", // GANTI DENGAN KUNCI ANDA
+    authDomain: "profitku-trade.firebaseapp.com", // GANTI DENGAN DOMAIN ANDA
+    databaseURL: "https://profitku-trade-default-rtdb.asia-southeast1.firebasedatabase.app", // GANTI DENGAN DB URL ANDA
+    projectId: "profitku-trade", // GANTI DENGAN PROJECT ID ANDA
+};
 
+let db, auth;
+let currentUserId = null; // User ID
+let isGuestMode = true; // DEFAULT: MODE DEMO
+
+// --- GLOBAL VARIABLES & DATA HANDLING ---
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let allEntries = {}; // Data format: { '2025-01-01': { USD: { amount: 10, note: '...' }, IDR: {...} } }
+
+// Function untuk menginisialisasi Firebase (HANYA jika tidak di Guest Mode/setelah login)
+function initializeFirebase() {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
-    const database = firebase.database();
-    const auth = firebase.auth(); 
+    db = firebase.database();
+    auth = firebase.auth();
+    console.log("Firebase Initialized.");
+}
 
-    const CURRENCY_SYMBOLS = {
-        'USD': '$', 'IDR': 'Rp', 'EUR': '€', 'JPY': '¥', 'BTC': '₿',
-    };
-    
-    let currentUserId = null; 
-    let data = { currentCurrency: 'IDR', allEntries: {} }; // Data akan kosong saat belum login
-    
-    const html = document.documentElement; 
-    const app = document.getElementById('app');
-    
-    // Elemen Header/Controls
-    const authStatusContainer = document.getElementById('authStatusContainer');
-    const currencySelect = document.getElementById('currencySelect'); 
-    const resetDataBtn = document.getElementById('resetDataBtn');
-
-    // Elemen Quick Action
-    const quickDate = document.getElementById('quickDate');
-    const quickAmt = document.getElementById('quickAmt');
-    const quickSave = document.getElementById('quickSave');
-
-    // Elemen Modals
-    const editorModal = document.getElementById('editorModal');
-    const editorTitle = document.getElementById('editorTitle');
-    const editorAmtInput = document.getElementById('editorAmt');
-    const editorNoteInput = document.getElementById('editorNote'); 
-    const loginRegisterModal = document.getElementById('loginRegisterModal');
-    const modalEmailInput = document.getElementById('modalEmail');
-    const modalPasswordInput = document.getElementById('modalPassword');
-    const loginModalAlert = document.getElementById('loginModalAlert');
-    const aboutModal = document.getElementById('aboutModal');
-    
-    // Elemen Tema
-    const themeToggle = document.getElementById('themeToggle');
-    const themeLabel = document.getElementById('themeLabel');
-    const themeIcon = themeToggle ? themeToggle.querySelector('.icon') : null;
-
-    let editingYMD = null; 
-    const today = new Date();
-    let viewYear = today.getFullYear();
-    let viewMonth = today.getMonth();
-
-    function formatYMD(y,m,d){ 
-        const mm=String(m+1).padStart(2,'0'); 
-        const dd=String(d).padStart(2,'0'); 
-        return `${y}-${mm}-${dd}`; 
-    }
-    
-    function getDbPath(uid) {
-        return 'users/' + uid;
-    }
-
-    function getCurrentEntries() {
-        // Saat belum login, data akan kosong, jadi kembalikan objek kosong untuk demo
-        if (!currentUserId) return {}; 
-        return data.allEntries[data.currentCurrency] || {};
-    }
-    
-    // FUNGSI LOAD DATA, SAVE DATA, FORMAT CURRENCY (TIDAK BERUBAH SIGNIFIKAN)
-    async function loadData(uid){ 
-        // ... (Fungsi loadData yang sama)
+// Function untuk load data (Local Storage di Guest Mode, Firebase jika ada user)
+function loadData() {
+    if (isGuestMode) {
+        // Load data dari Local Storage (Mode Demo)
         try {
-            const snapshot = await database.ref(getDbPath(uid)).once('value');
-            const loadedData = snapshot.val() || { entries: {}, currency: 'IDR' }; 
-            
-            let finalEntries = loadedData.allEntries || {};
-            if (loadedData.entries && Object.keys(loadedData.entries).length > 0) {
-                 finalEntries['IDR'] = loadedData.entries;
-                 delete loadedData.entries; 
+            const dataString = localStorage.getItem('profitku_guest_data');
+            if (dataString) {
+                allEntries = JSON.parse(dataString);
+            } else {
+                allEntries = {};
             }
-
-            for (const currency in finalEntries) {
-                for (const key in finalEntries[currency]) {
-                    if (typeof finalEntries[currency][key] === 'number') {
-                        finalEntries[currency][key] = { amount: finalEntries[currency][key], note: '' }; 
-                    }
-                }
+        } catch (e) {
+            console.error("Error loading data from local storage:", e);
+            allEntries = {};
+        }
+        renderCalendar();
+    } else {
+        // Load data dari Firebase (Mode Login)
+        if (!currentUserId) return;
+        
+        const userRef = db.ref('users/' + currentUserId);
+        userRef.once('value', snapshot => {
+            const data = snapshot.val();
+            if (data && data.allEntries) {
+                allEntries = data.allEntries;
+            } else {
+                allEntries = {};
             }
-
-         return {
-                currentCurrency: loadedData.currency || 'IDR',
-                allEntries: finalEntries
-            };
-
-        } catch (error) {
-            console.error("Error loading data from Firebase:", error);
-            return { currentCurrency: 'IDR', allEntries: {} }; 
-        }
-    }
-
-    async function saveData(uid){ 
-        if (!uid) return;
-        // ... (Fungsi saveData yang sama)
-        try {
-            const entriesToSave = {};
-            for (const currency in data.allEntries) {
-                const cleanedCurrencyEntries = {};
-                for (const ymd in data.allEntries[currency]) {
-                    const entry = data.allEntries[currency][ymd];
-                    const amount = Number(entry.amount); 
-                    
-                    if (amount !== 0 || entry.note.trim() !== '') {
-                         cleanedCurrencyEntries[ymd] = { amount: amount, note: entry.note };
-                    }
-                }
-                if (Object.keys(cleanedCurrencyEntries).length > 0) {
-                     entriesToSave[currency] = cleanedCurrencyEntries;
-                }
-            }
-            
-            data.allEntries = entriesToSave;
-            
-            await database.ref(getDbPath(uid)).set({ 
-                allEntries: data.allEntries, 
-                currency: data.currentCurrency
-            });
-        } catch (error) {
-            console.error("Error saving data to Firebase:", error);
-            alert("Gagal menyimpan data ke cloud.");
-        }
-    }
-    
-    async function resetCurrentCurrencyData(uid) {
-        if (!uid) return alert('Silakan login terlebih dahulu!');
-        
-        const currentCurrency = data.currentCurrency;
-        
-        const confirm1 = confirm(`PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda untuk mata uang ${currentCurrency} dari cloud (Firebase). Data tidak dapat dikembalikan.\n\nApakah Anda YAKIN ingin melanjutkan?`);
-        
-        if (!confirm1) {
-            return; 
-        }
-
-        const confirm2 = confirm(`PERINGATAN AKHIR! Semua data ${currentCurrency} Anda akan hilang PERMANEN. Pastikan Anda sudah meng-Export CSV.\n\nTekan OK untuk menghapus SEMUA DATA ${currentCurrency}.`);
-
-        if (confirm2) {
-            try {
-                await database.ref(getDbPath(uid) + `/allEntries/${currentCurrency}`).remove();
-                
-                delete data.allEntries[currentCurrency];
-                
-                alert(`Data ${currentCurrency} berhasil direset.`);
-                renderCalendar(); 
-            } catch (error) {
-                console.error("Error deleting data from Firebase:", error);
-                alert("Gagal mereset data. Silakan coba lagi.");
-            }
-        }
-    }
-
-    function formatCurrency(amount, currencyCode) {
-        // ... (Fungsi formatCurrency yang sama)
-        const symbol = CURRENCY_SYMBOLS[currencyCode] || '$';
-        const isLoss = amount < 0;
-        const isProfit = amount > 0;
-        
-        let displayAmount;
-        
-        if (currencyCode === 'IDR') {
-             const decimalOptions = { minimumFractionDigits: 0, maximumFractionDigits: 2 };
-             displayAmount = Math.abs(amount).toLocaleString('id-ID', decimalOptions); 
-        } else {
-            displayAmount = Math.abs(amount).toFixed(2);
-        }
-        
-        const absoluteDisplayAmount = displayAmount.replace('-', '');
-        let formattedString;
-
-        if (currencyCode === 'IDR') {
-            formattedString = (isLoss ? `-${symbol}${absoluteDisplayAmount}` : `${symbol}${absoluteDisplayAmount}`);
-        } 
-        else if (currencyCode === 'BTC') {
-            formattedString = (isLoss ? `-${symbol} ${absoluteDisplayAmount}` : `${symbol} ${absoluteDisplayAmount}`);
-        }
-        else {
-            formattedString = (isLoss ? `-${symbol}${absoluteDisplayAmount}` : `${symbol}${absoluteDisplayAmount}`);
-        }
-
-        if (isLoss) {
-            return `<span style="color: var(--red);">${formattedString}</span>`;
-        } else if (isProfit) {
-            return `<span style="color: var(--green);">${formattedString}</span>`;
-        } else {
-            return formattedString;
-        }
-    }
-
-    function togglePasswordVisibility(inputEl, toggleIconEl) {
-        if (!inputEl) return; 
-        if (inputEl.type === 'password') {
-            inputEl.type = 'text';
-            if (toggleIconEl) toggleIconEl.innerHTML = '&#x1f440;'; 
-        } else {
-            inputEl.type = 'password';
-            if (toggleIconEl) toggleIconEl.innerHTML = '&#x1f441;'; 
-        }
-    }
-    
-    function applyTheme(theme) {
-        html.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-        if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'Gelap' : 'Terang';
-        if (themeIcon) themeIcon.innerHTML = theme === 'dark' ? '🌙' : '☀️';
-    }
-
-    const storedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(storedTheme); 
-
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            applyTheme(newTheme);
+            renderCalendar();
+        }).catch(error => {
+            alert('Gagal memuat data dari database: ' + error.message);
+            renderCalendar(); // Render bahkan jika gagal
         });
     }
+}
 
-    function renderWeekdayHeader() {
-        // ... (Fungsi renderWeekdayHeader yang sama)
-        const weekdayHeader = document.getElementById('weekdayHeader');
-        if (!weekdayHeader) return;
-        weekdayHeader.innerHTML = ''; 
+// Function untuk menyimpan data (Local Storage di Guest Mode, Firebase jika ada user)
+function saveData() {
+    const dataToSave = {
+        allEntries: allEntries
+    };
 
-        const userLocale = navigator.language || navigator.userLanguage || 'id-ID'; 
-        const formatter = new Intl.DateTimeFormat(userLocale, { weekday: 'short' });
-
-        const today = new Date();
-        const startDay = today.getDate() - today.getDay(); 
-        
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(today.setDate(startDay + i));
-            let dayName = formatter.format(date);
-            
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'day muted small';
-            dayDiv.textContent = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-            weekdayHeader.appendChild(dayDiv);
+    if (isGuestMode) {
+        // Simpan data ke Local Storage (Mode Demo)
+        try {
+            localStorage.setItem('profitku_guest_data', JSON.stringify(dataToSave));
+            alert('Data sementara berhasil disimpan di browser Anda.');
+        } catch (e) {
+            alert('Gagal menyimpan data ke browser Anda. Mungkin ruang penyimpanan penuh.');
         }
-        
-        document.getElementById('monthLabel').textContent = new Date(viewYear,viewMonth,1).toLocaleString(userLocale, {month:'long'})+' '+viewYear;
-    }
-    
-    // --- RENDER CALENDAR UNTUK DEMO/DATA ASLI ---
-    function renderCalendar(){
-      const grid = document.getElementById('calendarGrid'); 
-      if(!grid) return; 
-
-      const currentEntries = getCurrentEntries(); 
-      const currentCurrency = data.currentCurrency;
-      
-      grid.innerHTML='';
-      renderWeekdayHeader(); 
-
-      const firstDay = new Date(viewYear,viewMonth,1).getDay();
-      const daysInMonth = new Date(viewYear,viewMonth+1,0).getDate();
-      for(let i=0;i<firstDay;i++){
-        const emptyCell = document.createElement('div');
-        emptyCell.className='day'; grid.appendChild(emptyCell);
-      }
-      for(let d=1;d<=daysInMonth;d++){
-        const ymd = formatYMD(viewYear,viewMonth,d);
-        
-        const entry = currentEntries[ymd] || { amount: 0, note: '' }; 
-        const amt = entry.amount;
-        const note = entry.note;
-        
-        const cell = document.createElement('div'); 
-        cell.className='day card-item';
-        
-        if(ymd===formatYMD(today.getFullYear(),today.getMonth(),today.getDate())) cell.classList.add('today');
-        
-        const amountDisplay = formatCurrency(amt, currentCurrency); 
-        const lossClass = amt < 0 ? ' loss' : (amt > 0 ? ' profit' : '');
-        
-        let noteIndicator = note.trim() !== '' ? '<span class="note-indicator">📝</span>' : '';
-
-        cell.innerHTML=`
-            <div class="date">${d}</div>
-            ${noteIndicator}
-            <div class="amount${lossClass}" data-date="${ymd}">${amountDisplay}</div>
-        `;
-        
-        cell.addEventListener('click',()=> openEditor(ymd,amt, note));
-        grid.appendChild(cell);
-      }
-      updateSummary();
-      updateAuthStatusDisplay(); // Update display setelah rendering
-    }
-    
-    function openEditor(ymd, amt, note) {
-      if (!editorModal) return;
-      editingYMD = ymd;
-      
-      // Jika belum login, beri peringatan di modal login
-      if (!currentUserId) {
-        openLoginModal("Anda harus **Login/Daftar** untuk dapat mengedit dan menyimpan data profit harian.");
-        return; 
-      }
-      
-      editorTitle.textContent = `Edit Data ${ymd} (${data.currentCurrency})`; 
-      
-      editorAmtInput.value = amt === 0 ? '' : String(amt); 
-      editorNoteInput.value = note || ''; 
-      editorModal.style.display = 'flex'; 
-      editorAmtInput.focus();
-    }
-    
-    function closeEditor() {
-      if (editorModal) editorModal.style.display = 'none'; 
-      editingYMD = null;
-    }
-    
-    function parseInput(inputString, currency) {
-        // ... (Fungsi parseInput yang sama)
-        let cleanString = inputString.trim();
-
-        if (cleanString === '') {
-            return 0;
-        }
-
-        cleanString = cleanString.replace(/[^\d,\.\-]/g, '');
-
-        if (currency === 'IDR') {
-            cleanString = cleanString.replace(/\./g, '');
-            cleanString = cleanString.replace(/,/g, '.');
-        } else {
-            cleanString = cleanString.replace(/,/g, '.');
-        }
-
-        const num = Number(cleanString);
-        
-        if (isNaN(num)) {
-            return null;
-        }
-        return num;
-    }
-
-    function updateSummary(){
-        // ... (Fungsi updateSummary yang sama)
-        const monthTotalEl = document.getElementById('monthTotal');
-        const avgDayEl = document.getElementById('avgDay');
-        const daysCountEl = document.getElementById('daysCount');
-        
-        if (!monthTotalEl || !avgDayEl || !daysCountEl || !quickAmt) return;
-        
-        const currentEntries = getCurrentEntries();
-        const currentCurrency = data.currentCurrency;
-        const monthKeyPrefix = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
-        let total=0,count=0;
-        
-        for(const k in currentEntries){ 
-            if(k.startsWith(monthKeyPrefix)){ 
-                const entry = currentEntries[k];
-                const amount = Number(entry.amount || 0); 
-                total += amount; 
-                if(amount !== 0 || entry.note.trim() !== '') count++; 
-            }
-        }
-        
-        const totalDisplay = formatCurrency(total, currentCurrency);
-        monthTotalEl.innerHTML = totalDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
-        
-        monthTotalEl.classList.remove('loss', 'profit');
-        if (total < 0) {
-            monthTotalEl.classList.add('loss'); 
-        } else if (total > 0) {
-            monthTotalEl.classList.add('profit');
-        }
-        
-        const avgDay = count ? (total / count) : 0;
-        const avgDisplay = formatCurrency(avgDay, currentCurrency);
-        avgDayEl.innerHTML = avgDisplay.replace(/<span style="color: var\(--(red|green)\);">/g, '').replace(/<\/span>/g, '');
-        
-        avgDayEl.classList.remove('loss', 'profit');
-        if (avgDay < 0) {
-            avgDayEl.classList.add('loss');
-        } else if (avgDay > 0) {
-            avgDayEl.classList.add('profit');
-        }
-        
-        daysCountEl.textContent = count;
-        quickAmt.placeholder = `Profit ${currentCurrency} (cth: 500.000 atau 10,50)`;
-    }
-    
-    // --- MODIFIKASI AUTENTIKASI ---
-    async function showApp(user){
-        currentUserId = user.uid;
-        data = await loadData(user.uid);
-        if(currencySelect) currencySelect.value = data.currentCurrency; 
-        
-        // Sembunyikan tombol reset jika belum login (sudah dilakukan via CSS display: none di HTML)
-        if (resetDataBtn) resetDataBtn.style.display = 'block'; 
-        
-        renderCalendar();
-    }
-    
-    function showDemo() {
-        currentUserId = null;
-        data = { currentCurrency: currencySelect ? currencySelect.value : 'IDR', allEntries: {} };
-        
-        // Sembunyikan tombol reset
-        if (resetDataBtn) resetDataBtn.style.display = 'none'; 
-        
-        renderCalendar();
-    }
-    
-    // --- MODAL LOGIN HANDLERS ---
-    function openLoginModal(alertMessage = null) {
-        if (!loginRegisterModal) return;
-        loginRegisterModal.style.display = 'flex';
-        modalEmailInput.value = '';
-        modalPasswordInput.value = '';
-        
-        if (alertMessage) {
-            loginModalAlert.innerHTML = alertMessage;
-            loginModalAlert.style.display = 'block';
-        } else {
-            loginModalAlert.style.display = 'none';
-        }
-    }
-    
-    function closeLoginModal() {
-        if (loginRegisterModal) loginRegisterModal.style.display = 'none';
-    }
-    
-    document.getElementById('showAboutModalBtn').addEventListener('click', () => {
-        if(aboutModal) aboutModal.style.display = 'flex';
-    });
-    
-    document.getElementById('closeAboutModalBtn').addEventListener('click', () => {
-        if(aboutModal) aboutModal.style.display = 'none';
-    });
-
-    // Toggle Password di Modal Login
-    document.getElementById('toggleModalPassword').addEventListener('click', () => {
-        togglePasswordVisibility(modalPasswordInput, document.getElementById('toggleModalPassword'));
-    });
-    
-    // Login dan Register di Modal
-    document.getElementById('modalLoginBtn').addEventListener('click', async ()=>{
-      const email = modalEmailInput.value.trim();
-      const password = modalPasswordInput.value;
-      if(!email || password.length < 6){ loginModalAlert.innerHTML = "Masukkan email dan password minimal 6 karakter"; loginModalAlert.style.display = 'block'; return; }
-      try {
-          await auth.signInWithEmailAndPassword(email, password);
-          closeLoginModal();
-      } catch(error) {
-          loginModalAlert.innerHTML = "Login Gagal: " + error.message;
-          loginModalAlert.style.display = 'block';
-      }
-    });
-
-    document.getElementById('modalRegisterBtn').addEventListener('click', async ()=>{
-      const email = modalEmailInput.value.trim();
-      const password = modalPasswordInput.value;
-      if(!email || password.length < 6){ loginModalAlert.innerHTML = "Masukkan email dan password minimal 6 karakter"; loginModalAlert.style.display = 'block'; return; }
-      try {
-          await auth.createUserWithEmailAndPassword(email, password);
-          closeLoginModal();
-      } catch(error) {
-          loginModalAlert.innerHTML = "Registrasi Gagal: " + error.message;
-          loginModalAlert.style.display = 'block';
-      }
-    });
-    
-    document.getElementById('closeLoginModalBtn').addEventListener('click', closeLoginModal);
-    
-    // --- FUNGSI BARU: MENGUPDATE STATUS LOGIN DI HEADER ---
-    function updateAuthStatusDisplay() {
-        if (!authStatusContainer) return;
-
-        if (currentUserId) {
-            // Sudah Login
-            authStatusContainer.innerHTML = `
-                <div class="card small">Akun: <strong id="acctEmail">${auth.currentUser.email}</strong></div>
-                <button class="btn ghost" id="logoutBtn" style="margin-top:0;">Logout</button>
-            `;
-            document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
-            // Tampilkan tombol reset data
-            if (resetDataBtn) resetDataBtn.style.display = 'block'; 
-        } else {
-            // Belum Login (Demo)
-            authStatusContainer.innerHTML = `
-                <div class="login-alert">Login/Daftar untuk Menyimpan Data Anda</div>
-                <button class="btn" id="showLoginBtn" style="margin-top:0;">Login / Daftar</button>
-            `;
-            document.getElementById('showLoginBtn').addEventListener('click', () => {
-                openLoginModal();
+    } else {
+        // Simpan data ke Firebase (Mode Login)
+        if (!currentUserId) return;
+        const userRef = db.ref('users/' + currentUserId);
+        userRef.update(dataToSave)
+            .then(() => {
+                alert('Data berhasil disimpan ke cloud!');
+            })
+            .catch(error => {
+                alert('Gagal menyimpan data ke cloud: ' + error.message);
             });
-            // Sembunyikan tombol reset data
-            if (resetDataBtn) resetDataBtn.style.display = 'none';
-        }
+    }
+}
+
+// --- CALENDAR RENDERING LOGIC ---
+function renderCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    calendarEl.innerHTML = ''; // Clear existing days
+    const monthYearEl = document.getElementById('currentMonthYear');
+    const summaryContentEl = document.getElementById('summaryContent');
+
+    const date = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayIndex = date.getDay(); // 0 for Sunday, 1 for Monday
+
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+
+    monthYearEl.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+    // Render day headers
+    dayNames.forEach(day => {
+        const header = document.createElement('div');
+        header.classList.add('day-header');
+        header.textContent = day;
+        calendarEl.appendChild(header);
+    });
+
+    // Render empty days
+    for (let i = 0; i < firstDayIndex; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.classList.add('day', 'empty');
+        calendarEl.appendChild(emptyDay);
     }
 
-    // --- LISTENER PERUBAHAN STATUS FIREBASE ---
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-          showApp(user); // Ambil data dan tampilkan
-      } else {
-          showDemo(); // Tampilkan kalender kosong (mode demo)
-      }
-      updateAuthStatusDisplay(); // Pastikan status di header diperbarui
-    });
+    // Render actual days
+    const totalProfitPerCurrency = {};
+    for (let day = 1; day <= lastDay; day++) {
+        const fullDate = formatYMD(currentYear, currentMonth, day);
+        const dayEl = document.createElement('div');
+        dayEl.classList.add('day');
+        dayEl.setAttribute('data-date', fullDate);
+        dayEl.onclick = () => showDataModal(fullDate);
 
-    // --- NAVIGASI DAN QUICK SAVE ---
-    const prevBtn = document.getElementById('prev');
-    if(prevBtn) prevBtn.addEventListener('click',()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
-    
-    const nextBtn = document.getElementById('next');
-    if(nextBtn) nextBtn.addEventListener('click',()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
-    
-    const todayBtn = document.getElementById('todayBtn');
-    if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
+        const numberEl = document.createElement('div');
+        numberEl.classList.add('day-number');
+        numberEl.textContent = day;
+        dayEl.appendChild(numberEl);
 
-    // --- LOGIKA SAVE DENGAN LOGIN CHECK ---
-    if(quickSave) quickSave.addEventListener('click', async ()=>{
-      // PERIKSA LOGIN SEBELUM MENYIMPAN
-      if(!currentUserId) {
-          openLoginModal("Anda harus **Login/Daftar** untuk dapat menyimpan data yang Anda masukkan."); 
-          return; 
-      }
-      
-      if(!quickDate) return; 
-      const d = quickDate.value;
-      const a = quickAmt.value;
-      if(!d){ alert('Pilih tanggal'); return; }
-      
-      const currentCurrency = data.currentCurrency;
-      const num = parseInput(a, currentCurrency); 
-      
-      if(num === null){ alert(`Masukkan angka profit yang valid untuk ${currentCurrency}! (Contoh: 500.000 atau 10,50)`); return; }
-      
-      if (!data.allEntries[currentCurrency]) {
-          data.allEntries[currentCurrency] = {};
-      }
-
-      data.allEntries[currentCurrency][d] = { amount: num, note: '' }; 
-      
-      await saveData(currentUserId); 
-      renderCalendar();
-      quickAmt.value='';
-    });
-    
-    // --- EDITOR MODAL HANDLERS ---
-    if(saveEditorBtn) saveEditorBtn.addEventListener('click', async () => {
-      // PERIKSA LOGIN SEBELUM MENYIMPAN
-      if (!currentUserId) {
-          openLoginModal("Anda harus **Login/Daftar** untuk dapat menyimpan perubahan pada data ini."); 
-          return; 
-      }
-      
-      if (!editingYMD) return; 
-      const n = editorAmtInput.value.trim();
-      const noteText = editorNoteInput.value.trim(); 
-      const currentCurrency = data.currentCurrency;
-      
-      const num = parseInput(n, currentCurrency);
-
-      if (num === null) {
-          alert(`Masukkan angka profit yang valid untuk ${currentCurrency}!`);
-          return;
-      }
-      
-      const finalNum = num; 
-      
-      if (!data.allEntries[currentCurrency]) {
-          data.allEntries[currentCurrency] = {};
-      }
-      
-      if (finalNum === 0 && noteText === '') {
-          delete data.allEntries[currentCurrency][editingYMD];
-      } else {
-          data.allEntries[currentCurrency][editingYMD] = { amount: finalNum, note: noteText };
-      }
-      
-      closeEditor();
-      await saveData(currentUserId); 
-      renderCalendar();
-    });
-
-    const closeEditorBtn = document.getElementById('closeEditorBtn');
-    if(closeEditorBtn) closeEditorBtn.addEventListener('click', closeEditor);
-    
-    if(deleteEditorBtn) deleteEditorBtn.addEventListener('click', async () => {
-      // PERIKSA LOGIN SEBELUM MENGHAPUS
-      if(!currentUserId) {
-          openLoginModal("Anda harus **Login/Daftar** untuk menghapus data dari Cloud Anda."); 
-          return; 
-      }
-      
-      const currentCurrency = data.currentCurrency;
-      if(confirm(`Yakin hapus data hari ${editingYMD} (${currentCurrency})? (Profit & Catatan)`)){
-          delete data.allEntries[currentCurrency][editingYMD];
-          closeEditor();
-          await saveData(currentUserId); 
-          renderCalendar();
-      }
-    });
-    
-    // --- HANDLER: RESET DATA MATA UANG AKTIF ---
-    if(resetDataBtn) resetDataBtn.addEventListener('click', () => {
-        resetCurrentCurrencyData(currentUserId);
-    });
-
-    // --- CURRENCY CHANGE ---
-    if(currencySelect) currencySelect.addEventListener('change', async (e) => {
-        data.currentCurrency = e.target.value; 
-        renderCalendar();
-        
-        // Simpan currency yang dipilih HANYA JIKA SUDAH LOGIN
-        if (currentUserId) {
-            await database.ref(getDbPath(currentUserId) + '/currency').set(data.currentCurrency);
-        }
-    });
-
-    // --- EXPORT CSV DENGAN SEMUA MATA UANG ---
-    const exportCsv = document.getElementById('exportCsv');
-    if(exportCsv) exportCsv.addEventListener('click', ()=>{
-        // ... (Fungsi exportCsv yang sama)
-        const rows=[['date','profit_amount', 'currency', 'note']]; 
-        let totalProfitPerCurrency = {};
-        
-        for (const currency in data.allEntries) {
-            const currencyEntries = data.allEntries[currency];
+        // Render profit indicators
+        if (allEntries[fullDate]) {
+            const dateEntries = allEntries[fullDate];
+            let totalDayProfit = 0;
+            let displayCount = 0;
             
-            for(const k of Object.keys(currencyEntries).sort()) {
-                const entry = currencyEntries[k];
-                const amount = entry.amount || 0;
-                const note = entry.note.replace(/,/g, ';').replace(/\n/g, ' '); 
+            for (const currency in dateEntries) {
+                const amount = dateEntries[currency].amount || 0;
                 
-                rows.push([k, String(amount), currency, note]); 
-                
+                // Hitung total bulanan
                 totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
+                
+                // Hitung total harian untuk warna
+                if (currency === 'USD') { // Gunakan USD sebagai patokan utama untuk warna harian
+                     totalDayProfit += amount;
+                } else if (!totalDayProfit && displayCount === 0) {
+                     // Jika USD 0, gunakan mata uang lain untuk warna pertama yang ditemui
+                     totalDayProfit += amount;
+                }
+                displayCount++;
+
+                const indicatorEl = document.createElement('div');
+                indicatorEl.classList.add('profit-indicator');
+                
+                const formattedAmount = formatCurrency(amount, currency);
+                indicatorEl.textContent = `${formattedAmount} (${currency})`;
+                
+                dayEl.appendChild(indicatorEl);
+            }
+            
+            // Atur warna latar belakang berdasarkan totalDayProfit (USD atau yang pertama ditemui)
+            if (totalDayProfit > 0) {
+                dayEl.style.backgroundColor = 'var(--success-color, #d4edda)'; // Warna Hijau Muda
+                dayEl.style.color = 'var(--text-color)';
+            } else if (totalDayProfit < 0) {
+                dayEl.style.backgroundColor = 'var(--danger-color, #f8d7da)'; // Warna Merah Muda
+                dayEl.style.color = 'var(--text-color)';
             }
         }
-        
-        rows.push(['---', '---', '---', '---']); 
-        for (const currency of Object.keys(totalProfitPerCurrency).sort()) {
+
+        calendarEl.appendChild(dayEl);
+    }
+
+    // Render summary
+    summaryContentEl.innerHTML = '';
+    const sortedCurrencies = Object.keys(totalProfitPerCurrency).sort();
+    
+    if (sortedCurrencies.length === 0) {
+        summaryContentEl.innerHTML = '<p>Belum ada entri profit/loss bulan ini.</p>';
+    } else {
+        sortedCurrencies.forEach(currency => {
             const total = totalProfitPerCurrency[currency];
-            const totalLabel = (total < 0) ? `Total Loss (${currency})` : `Total Profit (${currency})`;
-            const displayTotal = total.toFixed(2);
-            rows.push([totalLabel, String(displayTotal), currency, '']);
+            const className = total > 0 ? 'profit' : (total < 0 ? 'loss' : 'neutral');
+            const formattedTotal = formatCurrency(total, currency);
+            summaryContentEl.innerHTML += `<p>Total Profit/Loss (${currency}): <span class="${className}">${formattedTotal}</span></p>`;
+        });
+    }
+}
+
+// --- HELPER FUNCTIONS ---
+function formatYMD(year, month, day) {
+    const d = new Date(year, month, day);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dy = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dy}`;
+}
+
+function formatCurrency(amount, currency) {
+    const absAmount = Math.abs(amount);
+    let formatterOptions = { style: 'currency', currency: currency, minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
+    if (currency === 'IDR') {
+        // IDR: gunakan tanpa desimal untuk nominal besar, atau 0 desimal
+        formatterOptions = { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 };
+    }
+
+    const formatter = new Intl.NumberFormat('id-ID', formatterOptions);
+    const formatted = formatter.format(absAmount).replace('IDR', 'Rp'); // Perbaikan format IDR
+
+    return (amount < 0 ? '-' : '+') + formatted;
+}
+
+function prevMonth() {
+    currentMonth--;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    renderCalendar();
+}
+
+function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    renderCalendar();
+}
+
+// --- MODAL & FORM LOGIC ---
+let selectedDate = null;
+const dataModal = document.getElementById('dataModal');
+const authModal = document.getElementById('authModal');
+const aboutModal = document.getElementById('aboutModal');
+
+function showDataModal(date) {
+    selectedDate = date;
+    document.getElementById('modalTitle').textContent = `Input Profit/Loss untuk ${date}`;
+    document.getElementById('deleteEntryBtn').style.display = 'none';
+    
+    // Clear form and set default values
+    document.getElementById('dataForm').reset();
+    document.getElementById('inputAmount').value = '';
+    document.getElementById('inputNote').value = '';
+    document.getElementById('quickDate').value = date; // Set tanggal di form
+    document.getElementById('inputCurrency').value = 'USD'; // Default ke USD
+
+    // Check if data exists for this date
+    if (allEntries[date]) {
+        // Jika data ada, tampilkan entry pertama (atau yang paling utama)
+        const dateEntries = allEntries[date];
+        const primaryCurrency = Object.keys(dateEntries).sort()[0]; // Ambil currency pertama
+        if (dateEntries[primaryCurrency]) {
+             const entry = dateEntries[primaryCurrency];
+             document.getElementById('inputAmount').value = entry.amount;
+             document.getElementById('inputNote').value = entry.note;
+             document.getElementById('inputCurrency').value = primaryCurrency;
+             document.getElementById('deleteEntryBtn').style.display = 'inline-block';
+        }
+    }
+    
+    dataModal.style.display = 'flex';
+}
+
+function showLoginModal(message = '') {
+    if (currentUserId && !isGuestMode) {
+        alert("Anda sudah login!");
+        return;
+    }
+    document.getElementById('authError').textContent = message;
+    showLoginForm();
+    authModal.style.display = 'flex';
+}
+
+function showAboutModal() {
+    aboutModal.style.display = 'flex';
+}
+
+function closeModal(event, modalId) {
+    if (event && event.target.id === modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    } else if (event === null) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+}
+
+// --- SAVE, DELETE, AND AUTHENTICATION LOGIC ---
+
+document.getElementById('saveDataBtn').onclick = function() {
+    const amount = parseFloat(document.getElementById('inputAmount').value);
+    const currency = document.getElementById('inputCurrency').value;
+    const note = document.getElementById('inputNote').value;
+    const dateToSave = document.getElementById('quickDate').value;
+    
+    if (isNaN(amount) || !dateToSave) {
+        alert("Profit/Loss dan Tanggal wajib diisi.");
+        return;
+    }
+    
+    // LOGIC MODE DEMO: Peringatan jika belum login
+    if (isGuestMode) {
+        closeModal(null, 'dataModal'); // Tutup modal data
+        showLoginModal("Data Anda BELUM tersimpan! Silakan Login/Daftar untuk menghemat data ini secara permanen.");
+        return;
+    }
+
+    // Jika sudah Login: Lanjutkan proses simpan
+    if (!allEntries[dateToSave]) {
+        allEntries[dateToSave] = {};
+    }
+
+    // Hanya update entry untuk mata uang yang diinput
+    allEntries[dateToSave][currency] = {
+        amount: amount,
+        note: note
+    };
+    
+    saveData(); // Save to Firebase
+    renderCalendar();
+    closeModal(null, 'dataModal');
+};
+
+document.getElementById('deleteEntryBtn').onclick = function() {
+    if (!selectedDate || isGuestMode) return;
+    
+    // Hapus hanya mata uang yang sedang diedit
+    const currencyToDelete = document.getElementById('inputCurrency').value;
+    if (allEntries[selectedDate] && allEntries[selectedDate][currencyToDelete]) {
+        delete allEntries[selectedDate][currencyToDelete];
+        
+        // Jika tidak ada currency lain di tanggal itu, hapus tanggalnya
+        if (Object.keys(allEntries[selectedDate]).length === 0) {
+            delete allEntries[selectedDate];
         }
         
-        const csv=rows.map(r=>r.join(',')).join('\n');
-        const blob=new Blob([csv],{type:'text/csv'});
-        const url=URL.createObjectURL(blob);
-        
-        const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_multi_currency_export.csv`; a.click(); URL.revokeObjectURL(url);
-    });
+        saveData();
+        renderCalendar();
+        closeModal(null, 'dataModal');
+    }
+};
 
-    if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
+function clearAllData() {
+    if (!confirm("PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA data profit/loss Anda secara permanen?")) {
+        return;
+    }
+
+    allEntries = {};
+    if (isGuestMode) {
+        localStorage.removeItem('profitku_guest_data');
+    } else {
+        // Hapus di Firebase
+        if (currentUserId) {
+            db.ref('users/' + currentUserId).remove();
+        }
+    }
     
+    renderCalendar();
+    alert("Semua data berhasil dihapus!");
+}
+
+
+// --- AUTENTIKASI FIREBASE LOGIC ---
+
+function showLoginForm() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('authModalTitle').textContent = 'Login';
+    document.getElementById('authError').textContent = '';
+}
+
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('authModalTitle').textContent = 'Daftar Akun Baru';
+    document.getElementById('authError').textContent = '';
+}
+
+function loginUser() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    document.getElementById('authError').textContent = '';
+
+    auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            closeModal(null, 'authModal');
+            // Penanganan di onAuthStateChanged
+        })
+        .catch((error) => {
+            let message = '';
+            if (error.code === 'auth/user-not-found') {
+                message = 'Pengguna tidak ditemukan. Silakan daftar atau periksa email.';
+            } else if (error.code === 'auth/wrong-password') {
+                message = 'Password salah.';
+            } else {
+                message = 'Login Gagal: ' + error.message;
+            }
+            document.getElementById('authError').textContent = message;
+        });
+}
+
+function registerUser() {
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    document.getElementById('authError').textContent = '';
+
+    if (password.length < 6) {
+        document.getElementById('authError').textContent = 'Password minimal 6 karakter.';
+        return;
+    }
+
+    auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            closeModal(null, 'authModal');
+            // Penanganan di onAuthStateChanged
+        })
+        .catch((error) => {
+            let message = '';
+            if (error.code === 'auth/email-already-in-use') {
+                message = 'Email ini sudah terdaftar. Silakan Login.';
+            } else {
+                 message = 'Daftar Gagal: ' + error.message;
+            }
+            document.getElementById('authError').textContent = message;
+        });
+}
+
+function logoutUser() {
+    auth.signOut().then(() => {
+        // Penanganan di onAuthStateChanged
+    }).catch((error) => {
+        alert('Logout Gagal: ' + error.message);
+    });
+}
+
+// --- AUTH STATE LISTENER (MODE DEMO TOGGLE) ---
+function handleAuthStatus(user) {
+    const authInfoEl = document.getElementById('authInfo');
+    const authStatusAlertEl = document.getElementById('authStatusAlert');
+
+    if (user) {
+        // USER LOGGED IN
+        currentUserId = user.uid;
+        isGuestMode = false;
+        authInfoEl.innerHTML = `<a href="#" onclick="logoutUser()" class="btn btn-secondary">Logout</a>`;
+        authStatusAlertEl.style.backgroundColor = 'var(--success-color)';
+        authStatusAlertEl.innerHTML = `Selamat datang, ${user.email}! Data Anda sekarang tersimpan di Cloud.`;
+        loadData(); // Load data dari Firebase
+    } else {
+        // USER LOGGED OUT / GUEST MODE
+        currentUserId = null;
+        isGuestMode = true;
+        authInfoEl.innerHTML = `<a href="#" onclick="showLoginModal()" class="btn btn-primary">Login / Daftar</a>`;
+        authStatusAlertEl.style.backgroundColor = 'var(--danger-color)';
+        authStatusAlertEl.innerHTML = `Anda berada di **Mode Demo** (data tidak disimpan permanen). Silakan <a href="#" onclick="showLoginModal()" style="color: yellow; text-decoration: underline;">**LOGIN/DAFTAR**</a> untuk menyimpan data Anda!`;
+        loadData(); // Load data dari Local Storage
+    }
+}
+
+
+// --- THEME TOGGLE ---
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.querySelector('.theme-toggle').textContent = newTheme === 'dark' ? '🌙' : '☀️';
+}
+
+// --- INITIALIZATION ---
+window.onload = function() {
+    // Terapkan tema yang tersimpan
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.querySelector('.theme-toggle').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+    
+    // Inisialisasi Firebase HANYA untuk Auth listener
+    initializeFirebase(); 
+    
+    // Listener status autentikasi untuk menentukan Mode Demo
+    auth.onAuthStateChanged(handleAuthStatus);
+    
+    // Render tampilan awal
     renderCalendar(); 
-});
+    
+    // Event listener untuk tombol Ekspor
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        exportToCSV();
+    });
+};
+
+// --- EXPORT TO CSV LOGIC ---
+function exportToCSV() {
+    // Fungsi export sekarang menggunakan allEntries yang sudah dimuat (baik dari Local Storage maupun Firebase)
+    const data = { allEntries: allEntries };
+    
+    // Header CSV
+    const rows = [['Tanggal', 'Jumlah', 'Mata Uang', 'Catatan']];
+    const totalProfitPerCurrency = {};
+    
+    for (const date of Object.keys(data.allEntries).sort()) {
+        const dateEntries = data.allEntries[date];
+        
+        for (const currency in dateEntries) {
+            const entry = dateEntries[currency];
+            const amount = entry.amount || 0;
+            // Bersihkan catatan agar tidak merusak format CSV
+            const note = entry.note.replace(/,/g, ';').replace(/\\n/g, ' '); 
+            
+            rows.push([date, String(amount), currency, note]); 
+            
+            // Hitung total
+            totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
+        }
+    }
+    
+    // Tambahkan baris total
+    rows.push(['---', '---', '---', '---']); 
+    for (const currency of Object.keys(totalProfitPerCurrency).sort()) {
+        const total = totalProfitPerCurrency[currency];
+        const totalLabel = (total < 0) ? `Total Loss (${currency})` : `Total Profit (${currency})`;
+        // Format total untuk display yang benar
+        const displayTotal = total.toFixed(2); // menggunakan 2 desimal di CSV untuk konsistensi
+        rows.push([totalLabel, String(displayTotal), currency, '']);
+    }
+    
+    const csv=rows.map(r=>r.join(',')).join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    
+    // Nama file
+    const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_multi_currency_export.csv`; a.click(); URL.revokeObjectURL(url);
+}
+
+const today = new Date();
+const quickDate = document.getElementById('quickDate');
+if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
 </script>
 </body>
 </html>
