@@ -6,6 +6,14 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6266746973368170"
      crossorigin="anonymous"></script>
 
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LZ7ZQJC86F"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  // ID PENGUKURAN ANDA
+  gtag('config', 'G-LZ7ZQJC86F'); 
+</script>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ProfitKu: Aplikasi Kalender Profit Trading Harian Gratis (Lokal)</title>
@@ -325,7 +333,8 @@ textarea {
         
         <div class="controls">
             <div id="authStatusContainer" class="login-status-group">
-                </div>
+                <div class="login-alert">Mode Lokal. Data disimpan di browser.</div>
+            </div>
         </div>
     </header>
     <div class="card calendar">
@@ -350,7 +359,7 @@ textarea {
                 </select>
                 <button class="btn" id="todayBtn" style="margin-top:0;">Hari Ini</button>
                 <button class="btn export" id="exportCsv" style="margin-top:0;">Export CSV</button>
-                </div>
+            </div>
             
         </div>
         
@@ -437,7 +446,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'USD': '$', 'IDR': 'Rp', 'EUR': '€', 'JPY': '¥', 'BTC': '₿',
     };
     
-    // ⭐ Tidak ada lagi variabel currentUserId
     let data = { currentCurrency: 'IDR', allEntries: {} };
     const LOCAL_STORAGE_KEY = 'profitku_local_storage_data'; // Kunci untuk data lokal
     const LOCAL_CURRENCY_KEY = 'profitku_current_currency'; // Kunci untuk currency
@@ -777,10 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // ⭐ UPDATE STATUS (MENGHILANGKAN INFO LOGIN)
     function updateAuthStatusDisplay() {
-        if (!authStatusContainer) return;
-        authStatusContainer.innerHTML = `
-            <div class="login-alert">Mode Lokal. Data disimpan di browser.</div>
-        `;
+        // Konten sudah di hardcode di HTML, tidak perlu update lagi
     }
 
     // --- MODAL ABOUT HANDLERS ---
