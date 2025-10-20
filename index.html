@@ -24,7 +24,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 
 <style>
-/* --- BASE STYLE & THEMING (LAMA) --- */
+/* --- BASE STYLE & THEMING --- */
 body { font-family: sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s, color 0.3s; }
 :root {
     --bg-color: #f4f6f9; /* Light mode background */
@@ -290,16 +290,6 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let allEntries = {}; // Data format: { '2025-01-01': { USD: { amount: 10, note: '...' }, IDR: {...} } }
 
-// Function untuk menginisialisasi Firebase (HANYA jika tidak di Guest Mode/setelah login)
-function initializeFirebase() {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    db = firebase.database();
-    auth = firebase.auth();
-    console.log("Firebase Initialized.");
-}
-
 // Function untuk load data (Local Storage di Guest Mode, Firebase jika ada user)
 function loadData() {
     if (isGuestMode) {
@@ -422,7 +412,7 @@ function renderCalendar() {
                 totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
                 
                 // Hitung total harian untuk warna
-                if (currency === 'USD') { // Gunakan USD sebagai patokan utama untuk warna harian
+             if (currency === 'USD') { // Gunakan USD sebagai patokan utama untuk warna harian
                      totalDayProfit += amount;
                 } else if (!totalDayProfit && displayCount === 0) {
                      // Jika USD 0, gunakan mata uang lain untuk warna pertama yang ditemui
@@ -724,6 +714,7 @@ function handleAuthStatus(user) {
         // USER LOGGED IN
         currentUserId = user.uid;
         isGuestMode = false;
+        // Tombol Logout di header
         authInfoEl.innerHTML = `<a href="#" onclick="logoutUser()" class="btn btn-secondary">Logout</a>`;
         authStatusAlertEl.style.backgroundColor = 'var(--success-color)';
         authStatusAlertEl.innerHTML = `Selamat datang, ${user.email}! Data Anda sekarang tersimpan di Cloud.`;
@@ -732,6 +723,7 @@ function handleAuthStatus(user) {
         // USER LOGGED OUT / GUEST MODE
         currentUserId = null;
         isGuestMode = true;
+        // Tombol Login/Daftar di header
         authInfoEl.innerHTML = `<a href="#" onclick="showLoginModal()" class="btn btn-primary">Login / Daftar</a>`;
         authStatusAlertEl.style.backgroundColor = 'var(--danger-color)';
         authStatusAlertEl.innerHTML = `Anda berada di **Mode Demo** (data tidak disimpan permanen). Silakan <a href="#" onclick="showLoginModal()" style="color: yellow; text-decoration: underline;">**LOGIN/DAFTAR**</a> untuk menyimpan data Anda!`;
@@ -750,26 +742,34 @@ function toggleTheme() {
 }
 
 // --- INITIALIZATION ---
-window.onload = function() {
+function initializeApp() {
+    // 1. Inisialisasi Firebase (Harus dijalankan di awal)
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    db = firebase.database();
+    auth = firebase.auth();
+
+    // 2. Listener status autentikasi untuk menentukan Mode Demo
+    auth.onAuthStateChanged(handleAuthStatus);
+    
+    // 3. Render tampilan awal
+    renderCalendar(); 
+
+    // 4. Event listener lainnya
+    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+    
     // Terapkan tema yang tersimpan
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.querySelector('.theme-toggle').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
-    
-    // Inisialisasi Firebase HANYA untuk Auth listener
-    initializeFirebase(); 
-    
-    // Listener status autentikasi untuk menentukan Mode Demo
-    auth.onAuthStateChanged(handleAuthStatus);
-    
-    // Render tampilan awal
-    renderCalendar(); 
-    
-    // Event listener untuk tombol Ekspor
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        exportToCSV();
-    });
-};
+
+    const today = new Date();
+    const quickDate = document.getElementById('quickDate');
+    if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
+}
+
+window.onload = initializeApp;
 
 // --- EXPORT TO CSV LOGIC ---
 function exportToCSV() {
@@ -813,10 +813,6 @@ function exportToCSV() {
     // Nama file
     const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_multi_currency_export.csv`; a.click(); URL.revokeObjectURL(url);
 }
-
-const today = new Date();
-const quickDate = document.getElementById('quickDate');
-if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
 </script>
 </body>
 </html>
