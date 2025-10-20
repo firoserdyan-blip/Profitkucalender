@@ -24,7 +24,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 
 <style>
-/* --- BASE STYLE & THEMING --- */
+/* --- BASE STYLE & THEMING (LAMA) --- */
 body { font-family: sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s, color 0.3s; }
 :root {
     --bg-color: #f4f6f9; /* Light mode background */
@@ -285,19 +285,19 @@ let db, auth;
 let currentUserId = null; // User ID
 let isGuestMode = true; // DEFAULT: MODE DEMO
 
-// --- GLOBAL VARIABLES & DATA HANDLING ---
+// --- GLOBAL VARIABLES & DATA HANDLING (ASLI) ---
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
-let allEntries = {}; // Data format: { '2025-01-01': { USD: { amount: 10, note: '...' }, IDR: {...} } }
+let allEntries = {};
 
-// Function untuk load data (Local Storage di Guest Mode, Firebase jika ada user)
+// Function untuk load data (Diperbarui untuk Mode Demo/Lokal)
 function loadData() {
     if (isGuestMode) {
         // Load data dari Local Storage (Mode Demo)
         try {
             const dataString = localStorage.getItem('profitku_guest_data');
             if (dataString) {
-                allEntries = JSON.parse(dataString);
+                allEntries = JSON.parse(dataString).allEntries || {};
             } else {
                 allEntries = {};
             }
@@ -321,12 +321,12 @@ function loadData() {
             renderCalendar();
         }).catch(error => {
             alert('Gagal memuat data dari database: ' + error.message);
-            renderCalendar(); // Render bahkan jika gagal
+            renderCalendar();
         });
     }
 }
 
-// Function untuk menyimpan data (Local Storage di Guest Mode, Firebase jika ada user)
+// Function untuk menyimpan data (Diperbarui untuk Mode Demo/Lokal)
 function saveData() {
     const dataToSave = {
         allEntries: allEntries
@@ -336,7 +336,6 @@ function saveData() {
         // Simpan data ke Local Storage (Mode Demo)
         try {
             localStorage.setItem('profitku_guest_data', JSON.stringify(dataToSave));
-            alert('Data sementara berhasil disimpan di browser Anda.');
         } catch (e) {
             alert('Gagal menyimpan data ke browser Anda. Mungkin ruang penyimpanan penuh.');
         }
@@ -346,7 +345,7 @@ function saveData() {
         const userRef = db.ref('users/' + currentUserId);
         userRef.update(dataToSave)
             .then(() => {
-                alert('Data berhasil disimpan ke cloud!');
+                // Notifikasi berhasil simpan
             })
             .catch(error => {
                 alert('Gagal menyimpan data ke cloud: ' + error.message);
@@ -354,7 +353,8 @@ function saveData() {
     }
 }
 
-// --- CALENDAR RENDERING LOGIC ---
+
+// --- CALENDAR RENDERING LOGIC (ASLI) ---
 function renderCalendar() {
     const calendarEl = document.getElementById('calendar');
     calendarEl.innerHTML = ''; // Clear existing days
@@ -412,7 +412,7 @@ function renderCalendar() {
                 totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
                 
                 // Hitung total harian untuk warna
-             if (currency === 'USD') { // Gunakan USD sebagai patokan utama untuk warna harian
+                if (currency === 'USD') { // Gunakan USD sebagai patokan utama untuk warna harian
                      totalDayProfit += amount;
                 } else if (!totalDayProfit && displayCount === 0) {
                      // Jika USD 0, gunakan mata uang lain untuk warna pertama yang ditemui
@@ -458,7 +458,7 @@ function renderCalendar() {
     }
 }
 
-// --- HELPER FUNCTIONS ---
+// --- HELPER FUNCTIONS (ASLI) ---
 function formatYMD(year, month, day) {
     const d = new Date(year, month, day);
     const y = d.getFullYear();
@@ -472,12 +472,11 @@ function formatCurrency(amount, currency) {
     let formatterOptions = { style: 'currency', currency: currency, minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
     if (currency === 'IDR') {
-        // IDR: gunakan tanpa desimal untuk nominal besar, atau 0 desimal
         formatterOptions = { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 };
     }
 
     const formatter = new Intl.NumberFormat('id-ID', formatterOptions);
-    const formatted = formatter.format(absAmount).replace('IDR', 'Rp'); // Perbaikan format IDR
+    const formatted = formatter.format(absAmount).replace('IDR', 'Rp'); 
 
     return (amount < 0 ? '-' : '+') + formatted;
 }
@@ -500,7 +499,7 @@ function nextMonth() {
     renderCalendar();
 }
 
-// --- MODAL & FORM LOGIC ---
+// --- MODAL & FORM LOGIC (ASLI) ---
 let selectedDate = null;
 const dataModal = document.getElementById('dataModal');
 const authModal = document.getElementById('authModal');
@@ -511,18 +510,15 @@ function showDataModal(date) {
     document.getElementById('modalTitle').textContent = `Input Profit/Loss untuk ${date}`;
     document.getElementById('deleteEntryBtn').style.display = 'none';
     
-    // Clear form and set default values
     document.getElementById('dataForm').reset();
     document.getElementById('inputAmount').value = '';
     document.getElementById('inputNote').value = '';
-    document.getElementById('quickDate').value = date; // Set tanggal di form
-    document.getElementById('inputCurrency').value = 'USD'; // Default ke USD
+    document.getElementById('quickDate').value = date;
+    document.getElementById('inputCurrency').value = 'USD';
 
-    // Check if data exists for this date
     if (allEntries[date]) {
-        // Jika data ada, tampilkan entry pertama (atau yang paling utama)
         const dateEntries = allEntries[date];
-        const primaryCurrency = Object.keys(dateEntries).sort()[0]; // Ambil currency pertama
+        const primaryCurrency = Object.keys(dateEntries).sort()[0];
         if (dateEntries[primaryCurrency]) {
              const entry = dateEntries[primaryCurrency];
              document.getElementById('inputAmount').value = entry.amount;
@@ -557,7 +553,7 @@ function closeModal(event, modalId) {
     }
 }
 
-// --- SAVE, DELETE, AND AUTHENTICATION LOGIC ---
+// --- SAVE, DELETE, AND AUTHENTICATION LOGIC (Diperbarui) ---
 
 document.getElementById('saveDataBtn').onclick = function() {
     const amount = parseFloat(document.getElementById('inputAmount').value);
@@ -570,38 +566,34 @@ document.getElementById('saveDataBtn').onclick = function() {
         return;
     }
     
-    // LOGIC MODE DEMO: Peringatan jika belum login
-    if (isGuestMode) {
-        closeModal(null, 'dataModal'); // Tutup modal data
-        showLoginModal("Data Anda BELUM tersimpan! Silakan Login/Daftar untuk menghemat data ini secara permanen.");
-        return;
-    }
-
-    // Jika sudah Login: Lanjutkan proses simpan
     if (!allEntries[dateToSave]) {
         allEntries[dateToSave] = {};
     }
 
-    // Hanya update entry untuk mata uang yang diinput
     allEntries[dateToSave][currency] = {
         amount: amount,
         note: note
     };
     
-    saveData(); // Save to Firebase
+    saveData(); // Simpan ke Local Storage (jika demo) atau Firebase (jika login)
     renderCalendar();
     closeModal(null, 'dataModal');
+
+    // Tambahkan notifikasi mode demo HANYA saat mencoba save di mode demo
+    if (isGuestMode) {
+        alert('Data berhasil ditambahkan ke kalender (tersimpan sementara di browser Anda). Silakan Login/Daftar untuk menyimpan permanen!');
+    } else {
+        alert('Data berhasil disimpan ke cloud!');
+    }
 };
 
 document.getElementById('deleteEntryBtn').onclick = function() {
-    if (!selectedDate || isGuestMode) return;
+    if (!selectedDate) return;
     
-    // Hapus hanya mata uang yang sedang diedit
     const currencyToDelete = document.getElementById('inputCurrency').value;
     if (allEntries[selectedDate] && allEntries[selectedDate][currencyToDelete]) {
         delete allEntries[selectedDate][currencyToDelete];
         
-        // Jika tidak ada currency lain di tanggal itu, hapus tanggalnya
         if (Object.keys(allEntries[selectedDate]).length === 0) {
             delete allEntries[selectedDate];
         }
@@ -609,6 +601,13 @@ document.getElementById('deleteEntryBtn').onclick = function() {
         saveData();
         renderCalendar();
         closeModal(null, 'dataModal');
+
+        // Tambahkan notifikasi mode demo HANYA saat mencoba save di mode demo
+        if (isGuestMode) {
+             alert('Entri berhasil dihapus (tersimpan sementara di browser Anda).');
+        } else {
+             alert('Entri berhasil dihapus dari cloud.');
+        }
     }
 };
 
@@ -621,7 +620,6 @@ function clearAllData() {
     if (isGuestMode) {
         localStorage.removeItem('profitku_guest_data');
     } else {
-        // Hapus di Firebase
         if (currentUserId) {
             db.ref('users/' + currentUserId).remove();
         }
@@ -632,7 +630,7 @@ function clearAllData() {
 }
 
 
-// --- AUTENTIKASI FIREBASE LOGIC ---
+// --- AUTENTIKASI FIREBASE LOGIC (ASLI) ---
 
 function showLoginForm() {
     document.getElementById('loginForm').style.display = 'block';
@@ -656,7 +654,6 @@ function loginUser() {
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
             closeModal(null, 'authModal');
-            // Penanganan di onAuthStateChanged
         })
         .catch((error) => {
             let message = '';
@@ -684,7 +681,6 @@ function registerUser() {
     auth.createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
             closeModal(null, 'authModal');
-            // Penanganan di onAuthStateChanged
         })
         .catch((error) => {
             let message = '';
@@ -699,7 +695,7 @@ function registerUser() {
 
 function logoutUser() {
     auth.signOut().then(() => {
-        // Penanganan di onAuthStateChanged
+        // Handled by onAuthStateChanged
     }).catch((error) => {
         alert('Logout Gagal: ' + error.message);
     });
@@ -714,7 +710,6 @@ function handleAuthStatus(user) {
         // USER LOGGED IN
         currentUserId = user.uid;
         isGuestMode = false;
-        // Tombol Logout di header
         authInfoEl.innerHTML = `<a href="#" onclick="logoutUser()" class="btn btn-secondary">Logout</a>`;
         authStatusAlertEl.style.backgroundColor = 'var(--success-color)';
         authStatusAlertEl.innerHTML = `Selamat datang, ${user.email}! Data Anda sekarang tersimpan di Cloud.`;
@@ -723,7 +718,6 @@ function handleAuthStatus(user) {
         // USER LOGGED OUT / GUEST MODE
         currentUserId = null;
         isGuestMode = true;
-        // Tombol Login/Daftar di header
         authInfoEl.innerHTML = `<a href="#" onclick="showLoginModal()" class="btn btn-primary">Login / Daftar</a>`;
         authStatusAlertEl.style.backgroundColor = 'var(--danger-color)';
         authStatusAlertEl.innerHTML = `Anda berada di **Mode Demo** (data tidak disimpan permanen). Silakan <a href="#" onclick="showLoginModal()" style="color: yellow; text-decoration: underline;">**LOGIN/DAFTAR**</a> untuk menyimpan data Anda!`;
@@ -732,7 +726,7 @@ function handleAuthStatus(user) {
 }
 
 
-// --- THEME TOGGLE ---
+// --- THEME TOGGLE (ASLI) ---
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -741,7 +735,7 @@ function toggleTheme() {
     document.querySelector('.theme-toggle').textContent = newTheme === 'dark' ? '🌙' : '☀️';
 }
 
-// --- INITIALIZATION ---
+// --- INITIALIZATION (Diperbarui) ---
 function initializeApp() {
     // 1. Inisialisasi Firebase (Harus dijalankan di awal)
     if (!firebase.apps.length) {
@@ -750,33 +744,29 @@ function initializeApp() {
     db = firebase.database();
     auth = firebase.auth();
 
-    // 2. Listener status autentikasi untuk menentukan Mode Demo
-    auth.onAuthStateChanged(handleAuthStatus);
-    
-    // 3. Render tampilan awal
-    renderCalendar(); 
-
-    // 4. Event listener lainnya
-    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
-    
-    // Terapkan tema yang tersimpan
+    // 2. Terapkan tema yang tersimpan
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.querySelector('.theme-toggle').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
 
+    // 3. Listener status autentikasi untuk menentukan Mode Demo
+    auth.onAuthStateChanged(handleAuthStatus);
+    
+    // 4. Set tanggal cepat
     const today = new Date();
     const quickDate = document.getElementById('quickDate');
     if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
+    
+    // 5. Event listener untuk tombol Ekspor
+    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
 }
 
 window.onload = initializeApp;
 
-// --- EXPORT TO CSV LOGIC ---
+// --- EXPORT TO CSV LOGIC (ASLI) ---
 function exportToCSV() {
-    // Fungsi export sekarang menggunakan allEntries yang sudah dimuat (baik dari Local Storage maupun Firebase)
     const data = { allEntries: allEntries };
     
-    // Header CSV
     const rows = [['Tanggal', 'Jumlah', 'Mata Uang', 'Catatan']];
     const totalProfitPerCurrency = {};
     
@@ -786,23 +776,19 @@ function exportToCSV() {
         for (const currency in dateEntries) {
             const entry = dateEntries[currency];
             const amount = entry.amount || 0;
-            // Bersihkan catatan agar tidak merusak format CSV
             const note = entry.note.replace(/,/g, ';').replace(/\\n/g, ' '); 
             
             rows.push([date, String(amount), currency, note]); 
             
-            // Hitung total
             totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
         }
     }
     
-    // Tambahkan baris total
     rows.push(['---', '---', '---', '---']); 
     for (const currency of Object.keys(totalProfitPerCurrency).sort()) {
         const total = totalProfitPerCurrency[currency];
         const totalLabel = (total < 0) ? `Total Loss (${currency})` : `Total Profit (${currency})`;
-        // Format total untuk display yang benar
-        const displayTotal = total.toFixed(2); // menggunakan 2 desimal di CSV untuk konsistensi
+        const displayTotal = total.toFixed(2); 
         rows.push([totalLabel, String(displayTotal), currency, '']);
     }
     
@@ -810,7 +796,6 @@ function exportToCSV() {
     const blob=new Blob([csv],{type:'text/csv'});
     const url=URL.createObjectURL(blob);
     
-    // Nama file
     const a=document.createElement('a'); a.href=url; a.download=`profit_calendar_multi_currency_export.csv`; a.click(); URL.revokeObjectURL(url);
 }
 </script>
