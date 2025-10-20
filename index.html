@@ -24,7 +24,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 
 <style>
-/* --- BASE STYLE & THEMING (LAMA) --- */
+/* --- BASE STYLE & THEMING --- */
 body { font-family: sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s, color 0.3s; }
 :root {
     --bg-color: #f4f6f9; /* Light mode background */
@@ -282,10 +282,10 @@ const firebaseConfig = {
 };
 
 let db, auth;
-let currentUserId = null; // User ID
+let currentUserId = null; 
 let isGuestMode = true; // DEFAULT: MODE DEMO
 
-// --- GLOBAL VARIABLES & DATA HANDLING (ASLI) ---
+// --- GLOBAL VARIABLES & DATA HANDLING ---
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let allEntries = {};
@@ -297,7 +297,7 @@ function loadData() {
         try {
             const dataString = localStorage.getItem('profitku_guest_data');
             if (dataString) {
-                allEntries = JSON.parse(dataString).allEntries || {};
+                allEntries = JSON.parse(dataString).allEntries || {}; 
             } else {
                 allEntries = {};
             }
@@ -354,16 +354,16 @@ function saveData() {
 }
 
 
-// --- CALENDAR RENDERING LOGIC (ASLI) ---
+// --- CALENDAR RENDERING LOGIC ---
 function renderCalendar() {
     const calendarEl = document.getElementById('calendar');
-    calendarEl.innerHTML = ''; // Clear existing days
+    calendarEl.innerHTML = '';
     const monthYearEl = document.getElementById('currentMonthYear');
     const summaryContentEl = document.getElementById('summaryContent');
 
     const date = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const firstDayIndex = date.getDay(); // 0 for Sunday, 1 for Monday
+    const firstDayIndex = date.getDay();
 
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
@@ -412,10 +412,9 @@ function renderCalendar() {
                 totalProfitPerCurrency[currency] = (totalProfitPerCurrency[currency] || 0) + amount;
                 
                 // Hitung total harian untuk warna
-                if (currency === 'USD') { // Gunakan USD sebagai patokan utama untuk warna harian
+                if (currency === 'USD') {
                      totalDayProfit += amount;
                 } else if (!totalDayProfit && displayCount === 0) {
-                     // Jika USD 0, gunakan mata uang lain untuk warna pertama yang ditemui
                      totalDayProfit += amount;
                 }
                 displayCount++;
@@ -429,12 +428,12 @@ function renderCalendar() {
                 dayEl.appendChild(indicatorEl);
             }
             
-            // Atur warna latar belakang berdasarkan totalDayProfit (USD atau yang pertama ditemui)
+            // Atur warna latar belakang berdasarkan totalDayProfit
             if (totalDayProfit > 0) {
-                dayEl.style.backgroundColor = 'var(--success-color, #d4edda)'; // Warna Hijau Muda
+                dayEl.style.backgroundColor = 'var(--success-color, #d4edda)'; 
                 dayEl.style.color = 'var(--text-color)';
             } else if (totalDayProfit < 0) {
-                dayEl.style.backgroundColor = 'var(--danger-color, #f8d7da)'; // Warna Merah Muda
+                dayEl.style.backgroundColor = 'var(--danger-color, #f8d7da)'; 
                 dayEl.style.color = 'var(--text-color)';
             }
         }
@@ -458,7 +457,7 @@ function renderCalendar() {
     }
 }
 
-// --- HELPER FUNCTIONS (ASLI) ---
+// --- HELPER FUNCTIONS ---
 function formatYMD(year, month, day) {
     const d = new Date(year, month, day);
     const y = d.getFullYear();
@@ -476,7 +475,7 @@ function formatCurrency(amount, currency) {
     }
 
     const formatter = new Intl.NumberFormat('id-ID', formatterOptions);
-    const formatted = formatter.format(absAmount).replace('IDR', 'Rp'); 
+    const formatted = formatter.format(absAmount).replace('IDR', 'Rp');
 
     return (amount < 0 ? '-' : '+') + formatted;
 }
@@ -499,7 +498,7 @@ function nextMonth() {
     renderCalendar();
 }
 
-// --- MODAL & FORM LOGIC (ASLI) ---
+// --- MODAL & FORM LOGIC ---
 let selectedDate = null;
 const dataModal = document.getElementById('dataModal');
 const authModal = document.getElementById('authModal');
@@ -553,7 +552,7 @@ function closeModal(event, modalId) {
     }
 }
 
-// --- SAVE, DELETE, AND AUTHENTICATION LOGIC (Diperbarui) ---
+// --- SAVE, DELETE, AND AUTHENTICATION LOGIC ---
 
 document.getElementById('saveDataBtn').onclick = function() {
     const amount = parseFloat(document.getElementById('inputAmount').value);
@@ -575,11 +574,11 @@ document.getElementById('saveDataBtn').onclick = function() {
         note: note
     };
     
-    saveData(); // Simpan ke Local Storage (jika demo) atau Firebase (jika login)
+    saveData();
     renderCalendar();
     closeModal(null, 'dataModal');
 
-    // Tambahkan notifikasi mode demo HANYA saat mencoba save di mode demo
+    // Notifikasi Mode Demo
     if (isGuestMode) {
         alert('Data berhasil ditambahkan ke kalender (tersimpan sementara di browser Anda). Silakan Login/Daftar untuk menyimpan permanen!');
     } else {
@@ -602,7 +601,6 @@ document.getElementById('deleteEntryBtn').onclick = function() {
         renderCalendar();
         closeModal(null, 'dataModal');
 
-        // Tambahkan notifikasi mode demo HANYA saat mencoba save di mode demo
         if (isGuestMode) {
              alert('Entri berhasil dihapus (tersimpan sementara di browser Anda).');
         } else {
@@ -630,7 +628,7 @@ function clearAllData() {
 }
 
 
-// --- AUTENTIKASI FIREBASE LOGIC (ASLI) ---
+// --- AUTENTIKASI FIREBASE LOGIC ---
 
 function showLoginForm() {
     document.getElementById('loginForm').style.display = 'block';
@@ -726,7 +724,7 @@ function handleAuthStatus(user) {
 }
 
 
-// --- THEME TOGGLE (ASLI) ---
+// --- THEME TOGGLE ---
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -735,7 +733,7 @@ function toggleTheme() {
     document.querySelector('.theme-toggle').textContent = newTheme === 'dark' ? '🌙' : '☀️';
 }
 
-// --- INITIALIZATION (Diperbarui) ---
+// --- INITIALIZATION ---
 function initializeApp() {
     // 1. Inisialisasi Firebase (Harus dijalankan di awal)
     if (!firebase.apps.length) {
@@ -763,7 +761,7 @@ function initializeApp() {
 
 window.onload = initializeApp;
 
-// --- EXPORT TO CSV LOGIC (ASLI) ---
+// --- EXPORT TO CSV LOGIC ---
 function exportToCSV() {
     const data = { allEntries: allEntries };
     
