@@ -447,7 +447,7 @@ textarea {
             <li>✅ **Pencatatan Harian:** Masukkan jumlah profit atau kerugian (bisa negatif) untuk setiap hari.</li>
             <li>✅ **Dukungan Multi-Mata Uang:** Catat profit dalam IDR, USD, EUR, JPY, hingga Bitcoin (₿).</li>
             <li>✅ **Ringkasan Otomatis:** Dapatkan total profit bulanan dan rata-rata profit per hari secara otomatis.</li>
-            <li>✅ **Catatan Harian:** Tambahkan deskripsi singkat pada setiap entri kalender (misal: "Profit dari BTC/IDR" atau "Loss karena telat *cut loss*").</li>
+            <li>✅ **Catatan Harian:** Tambahkan deskripsi singkat pada setiap entri kalender (misal: "Profit dari BTC/IDR" atau "Loss karena entry telat").</li>
             <li>✅ **Ekspor Data:** Export semua data profit Anda ke file CSV kapan saja untuk analisis lebih lanjut.</li>
             <li>✅ **Data Aman:** Dilindungi oleh sistem login Firebase Google yang terpercaya.</li>
         </ul>
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
       authDomain: "profitku-a5f3a.firebaseapp.com",
       databaseURL: "https://profitku-a5f3a-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "profitku-a5f3a",
-      storageBucket: "profitku-a5f3a.firebasestorage.app",
+      storageBucket: "profitku-a5f3a.firebasestorage.com",
       messagingSenderId: "222392994535",
       appId: "1:222392994535:web:a8e13f3238dedaae367042",
       measurementId: "G-LZ7ZQJC86F"
@@ -488,7 +488,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     let currentUserId = null; 
-    let data = { currentCurrency: 'IDR', allEntries: {} }; // Data akan kosong saat belum login
+    let data = { currentCurrency: 'IDR', allEntries: {} }; // Data akan kosong saat belum login/mode demo
+    const LOCAL_STORAGE_KEY = 'profitku_demo_data'; // Kunci untuk data demo
     
     const html = document.documentElement; 
     const app = document.getElementById('app');
@@ -497,7 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const authStatusContainer = document.getElementById('authStatusContainer');
     const currencySelect = document.getElementById('currencySelect'); 
     const resetDataBtn = document.getElementById('resetDataBtn');
-
+    
+    // Quick Action Footer
+    const mainFooter = document.querySelector('.main-footer'); // Footer utama
+    
     // Elemen Quick Action
     const quickDate = document.getElementById('quickDate');
     const quickAmt = document.getElementById('quickAmt');
@@ -534,25 +538,58 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'users/' + uid;
     }
 
+    // ⭐ FUNGSI BARU: MENGELOLA DATA DEMO LOKAL
+    function loadLocalData() {
+        try {
+            const localDataStr = localStorage.getItem(LOCAL_STORAGE_KEY);
+            // Local storage menyimpan allEntries (objek yang isinya key mata uang)
+            const loaded = localDataStr ? JSON.parse(localDataStr) : {};
+            
+            // Logika membersihkan dan memastikan format { amount: number, note: string }
+            for (const currency in loaded) {
+                for (const key in loaded[currency]) {
+                    if (typeof loaded[currency][key] === 'number') {
+                        loaded[currency][key] = { amount: loaded[currency][key], note: '' }; 
+                    }
+                }
+            }
+            return loaded;
+        } catch (e) {
+            console.error("Error loading local data:", e);
+            return {};
+        }
+    }
+    
+    function saveLocalData() {
+        try {
+            // Hanya simpan allEntries dari objek data saat ini ke local storage
+            const dataToSave = data.allEntries;
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+        } catch (e) {
+            console.error("Error saving local data:", e);
+        }
+    }
+    
     function getCurrentEntries() {
-        // Saat belum login, data akan kosong, jadi kembalikan objek kosong untuk demo
-        if (!currentUserId) return {}; 
+        // Jika belum login, gunakan data.allEntries yang sudah dimuat oleh showDemo() dari local storage
+        // Jika sudah login, data.allEntries adalah data dari Firebase
         return data.allEntries[data.currentCurrency] || {};
     }
     
-    // FUNGSI LOAD DATA, SAVE DATA, FORMAT CURRENCY (TIDAK BERUBAH SIGNIFIKAN)
+    // FUNGSI LOAD DATA, SAVE DATA, FORMAT CURRENCY 
     async function loadData(uid){ 
-        // ... (Fungsi loadData yang sama)
         try {
             const snapshot = await database.ref(getDbPath(uid)).once('value');
             const loadedData = snapshot.val() || { entries: {}, currency: 'IDR' }; 
             
             let finalEntries = loadedData.allEntries || {};
+            // Logika migrasi data lama (entries menjadi allEntries['IDR'])
             if (loadedData.entries && Object.keys(loadedData.entries).length > 0) {
                  finalEntries['IDR'] = loadedData.entries;
                  delete loadedData.entries; 
             }
 
+            // Logika membersihkan dan memastikan format { amount: number, note: string }
             for (const currency in finalEntries) {
                 for (const key in finalEntries[currency]) {
                     if (typeof finalEntries[currency][key] === 'number') {
@@ -560,6 +597,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+            
+            // ⭐ Hapus data demo lokal setelah login berhasil
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
 
          return {
                 currentCurrency: loadedData.currency || 'IDR',
@@ -573,8 +613,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function saveData(uid){ 
-        if (!uid) return;
-        // ... (Fungsi saveData yang sama)
+        if (!uid) {
+            // ⭐ Simpan ke Local Storage jika tidak ada UID (mode demo)
+            saveLocalData();
+            return;
+        } 
+
         try {
             const entriesToSave = {};
             for (const currency in data.allEntries) {
@@ -605,10 +649,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function resetCurrentCurrencyData(uid) {
-        if (!uid) return alert('Silakan login terlebih dahulu!');
-        
         const currentCurrency = data.currentCurrency;
         
+        if (!uid) {
+            // ⭐ Logika reset data demo lokal
+            const confirm1 = confirm(`PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss demo Anda untuk mata uang ${currentCurrency} yang tersimpan di browser ini.\n\nApakah Anda YAKIN ingin melanjutkan?`);
+            if (!confirm1) return;
+            
+            if (data.allEntries[currentCurrency]) {
+                 delete data.allEntries[currentCurrency];
+            }
+            saveLocalData();
+            alert(`Data demo ${currentCurrency} berhasil direset.`);
+            renderCalendar();
+            return;
+        }
+        
+        // Logika reset data Firebase (tetap)
         const confirm1 = confirm(`PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda untuk mata uang ${currentCurrency} dari cloud (Firebase). Data tidak dapat dikembalikan.\n\nApakah Anda YAKIN ingin melanjutkan?`);
         
         if (!confirm1) {
@@ -633,7 +690,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatCurrency(amount, currencyCode) {
-        // ... (Fungsi formatCurrency yang sama)
         const symbol = CURRENCY_SYMBOLS[currencyCode] || '$';
         const isLoss = amount < 0;
         const isProfit = amount > 0;
@@ -699,7 +755,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderWeekdayHeader() {
-        // ... (Fungsi renderWeekdayHeader yang sama)
         const weekdayHeader = document.getElementById('weekdayHeader');
         if (!weekdayHeader) return;
         weekdayHeader.innerHTML = ''; 
@@ -774,11 +829,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!editorModal) return;
       editingYMD = ymd;
       
-      // Jika belum login, beri peringatan di modal login
-      if (!currentUserId) {
+      // ⭐ HILANGKAN PERINGATAN LOGIN DI SINI
+      /* if (!currentUserId) {
         openLoginModal("Anda harus **Login/Daftar** untuk dapat mengedit dan menyimpan data profit harian.");
         return; 
       }
+      */
       
       editorTitle.textContent = `Edit Data ${ymd} (${data.currentCurrency})`; 
       
@@ -794,7 +850,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function parseInput(inputString, currency) {
-        // ... (Fungsi parseInput yang sama)
         let cleanString = inputString.trim();
 
         if (cleanString === '') {
@@ -819,7 +874,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateSummary(){
-        // ... (Fungsi updateSummary yang sama)
         const monthTotalEl = document.getElementById('monthTotal');
         const avgDayEl = document.getElementById('avgDay');
         const daysCountEl = document.getElementById('daysCount');
@@ -871,23 +925,64 @@ document.addEventListener('DOMContentLoaded', () => {
         data = await loadData(user.uid);
         if(currencySelect) currencySelect.value = data.currentCurrency; 
         
-        // Sembunyikan tombol reset jika belum login (sudah dilakukan via CSS display: none di HTML)
         if (resetDataBtn) resetDataBtn.style.display = 'block'; 
+        
+        // ⭐ Hapus tombol reset data demo lokal jika ada
+        const localResetBtn = document.getElementById('resetLocalDataBtn');
+        if(localResetBtn) localResetBtn.remove();
+        
+        // ⭐ Update teks footer
+        const footerNote = mainFooter.querySelector('.footer-note');
+        if(footerNote) footerNote.textContent = 'Data Anda tersimpan aman di cloud (Firebase).';
         
         renderCalendar();
     }
     
     function showDemo() {
         currentUserId = null;
-        data = { currentCurrency: currencySelect ? currencySelect.value : 'IDR', allEntries: {} };
         
-        // Sembunyikan tombol reset
+        // Muat currentCurrency dari local storage jika ada, atau gunakan default 'IDR'
+        const storedCurrency = localStorage.getItem('profitku_current_currency') || 'IDR';
+        
+        data = { 
+            currentCurrency: currencySelect ? currencySelect.value : storedCurrency, 
+            // ⭐ Muat data dari Local Storage saat mode demo
+            allEntries: loadLocalData() 
+        };
+        
+        if(currencySelect) currencySelect.value = data.currentCurrency; 
+
+        // Sembunyikan tombol reset Firebase
         if (resetDataBtn) resetDataBtn.style.display = 'none'; 
         
+        // ⭐ Tambahkan/Update tombol reset data demo lokal
+        let localResetBtn = document.getElementById('resetLocalDataBtn');
+        if (!localResetBtn) {
+            localResetBtn = document.createElement('button');
+            localResetBtn.id = 'resetLocalDataBtn';
+            localResetBtn.className = 'btn danger footer-btn';
+            localResetBtn.style.cssText = 'background: #dc2626; color: white; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-top: 0; flex-shrink: 0;';
+            localResetBtn.textContent = 'Reset Data Demo Aktif';
+            localResetBtn.addEventListener('click', () => {
+                 resetCurrentCurrencyData(null); // Panggil reset dengan UID null
+            });
+            // Sisipkan di samping tombol About
+            const aboutBtn = mainFooter.querySelector('#showAboutModalBtn');
+            if(aboutBtn) {
+                mainFooter.insertBefore(localResetBtn, aboutBtn);
+            } else {
+                 mainFooter.appendChild(localResetBtn);
+            }
+        }
+
+        // ⭐ Update teks footer
+        const footerNote = mainFooter.querySelector('.footer-note');
+        if(footerNote) footerNote.textContent = 'Data yang Anda masukkan saat ini tersimpan di browser Anda (Demo). Data akan hilang jika Anda ganti browser/perangkat.';
+
         renderCalendar();
     }
     
-    // --- MODAL LOGIN HANDLERS ---
+    // --- MODAL LOGIN HANDLERS (Tidak berubah) ---
     function openLoginModal(alertMessage = null) {
         if (!loginRegisterModal) return;
         loginRegisterModal.style.display = 'flex';
@@ -959,18 +1054,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="btn ghost" id="logoutBtn" style="margin-top:0;">Logout</button>
             `;
             document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
-            // Tampilkan tombol reset data
             if (resetDataBtn) resetDataBtn.style.display = 'block'; 
         } else {
             // Belum Login (Demo)
             authStatusContainer.innerHTML = `
-                <div class="login-alert">Login/Daftar untuk Menyimpan Data Anda</div>
+                <div class="login-alert">Data tersimpan lokal. <span style="font-weight: 400;">Login/Daftar untuk menyimpan ke Cloud.</span></div>
                 <button class="btn" id="showLoginBtn" style="margin-top:0;">Login / Daftar</button>
             `;
             document.getElementById('showLoginBtn').addEventListener('click', () => {
                 openLoginModal();
             });
-            // Sembunyikan tombol reset data
             if (resetDataBtn) resetDataBtn.style.display = 'none';
         }
     }
@@ -995,13 +1088,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayBtn = document.getElementById('todayBtn');
     if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
 
-    // --- LOGIKA SAVE DENGAN LOGIN CHECK ---
+    // --- LOGIKA QUICK SAVE (MODIFIKASI: HILANGKAN CHECK LOGIN) ---
     if(quickSave) quickSave.addEventListener('click', async ()=>{
-      // PERIKSA LOGIN SEBELUM MENYIMPAN
+      /* // PERIKSA LOGIN SEBELUM MENYIMPAN (DIHAPUS UNTUK FITUR DEMO)
       if(!currentUserId) {
           openLoginModal("Anda harus **Login/Daftar** untuk dapat menyimpan data yang Anda masukkan."); 
           return; 
       }
+      */
       
       if(!quickDate) return; 
       const d = quickDate.value;
@@ -1019,18 +1113,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       data.allEntries[currentCurrency][d] = { amount: num, note: '' }; 
       
-      await saveData(currentUserId); 
+      await saveData(currentUserId); // ⭐ saveData akan menyimpan lokal jika currentUserId null
       renderCalendar();
       quickAmt.value='';
     });
     
-    // --- EDITOR MODAL HANDLERS ---
+    // --- EDITOR MODAL HANDLERS (MODIFIKASI: HILANGKAN CHECK LOGIN) ---
+    const saveEditorBtn = document.getElementById('saveEditorBtn');
+    const deleteEditorBtn = document.getElementById('deleteEditorBtn');
+
     if(saveEditorBtn) saveEditorBtn.addEventListener('click', async () => {
-      // PERIKSA LOGIN SEBELUM MENYIMPAN
+      /* // PERIKSA LOGIN SEBELUM MENYIMPAN (DIHAPUS UNTUK FITUR DEMO)
       if (!currentUserId) {
           openLoginModal("Anda harus **Login/Daftar** untuk dapat menyimpan perubahan pada data ini."); 
           return; 
       }
+      */
       
       if (!editingYMD) return; 
       const n = editorAmtInput.value.trim();
@@ -1057,7 +1155,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       closeEditor();
-      await saveData(currentUserId); 
+      await saveData(currentUserId); // ⭐ saveData akan menyimpan lokal jika currentUserId null
       renderCalendar();
     });
 
@@ -1065,17 +1163,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if(closeEditorBtn) closeEditorBtn.addEventListener('click', closeEditor);
     
     if(deleteEditorBtn) deleteEditorBtn.addEventListener('click', async () => {
-      // PERIKSA LOGIN SEBELUM MENGHAPUS
+      /* // PERIKSA LOGIN SEBELUM MENGHAPUS (DIHAPUS UNTUK FITUR DEMO)
       if(!currentUserId) {
           openLoginModal("Anda harus **Login/Daftar** untuk menghapus data dari Cloud Anda."); 
           return; 
       }
+      */
       
       const currentCurrency = data.currentCurrency;
-      if(confirm(`Yakin hapus data hari ${editingYMD} (${currentCurrency})? (Profit & Catatan)`)){
+      const dataLocation = currentUserId ? 'Cloud Anda' : 'browser Anda (Demo)';
+
+      if(confirm(`Yakin hapus data hari ${editingYMD} (${currentCurrency}) dari ${dataLocation}? (Profit & Catatan)`)){
+          
+          if (!data.allEntries[currentCurrency]) {
+                data.allEntries[currentCurrency] = {};
+          }
+          
           delete data.allEntries[currentCurrency][editingYMD];
           closeEditor();
-          await saveData(currentUserId); 
+          await saveData(currentUserId); // ⭐ saveData akan menyimpan lokal jika currentUserId null
           renderCalendar();
       }
     });
@@ -1090,16 +1196,17 @@ document.addEventListener('DOMContentLoaded', () => {
         data.currentCurrency = e.target.value; 
         renderCalendar();
         
-        // Simpan currency yang dipilih HANYA JIKA SUDAH LOGIN
+        // Simpan currency yang dipilih
         if (currentUserId) {
             await database.ref(getDbPath(currentUserId) + '/currency').set(data.currentCurrency);
         }
+        // ⭐ Simpan juga ke local storage agar currency demo tetap sama
+        localStorage.setItem('profitku_current_currency', data.currentCurrency);
     });
 
-    // --- EXPORT CSV DENGAN SEMUA MATA UANG ---
+    // --- EXPORT CSV DENGAN SEMUA MATA UANG (Tidak berubah) ---
     const exportCsv = document.getElementById('exportCsv');
     if(exportCsv) exportCsv.addEventListener('click', ()=>{
-        // ... (Fungsi exportCsv yang sama)
         const rows=[['date','profit_amount', 'currency', 'note']]; 
         let totalProfitPerCurrency = {};
         
@@ -1134,7 +1241,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
     
-    renderCalendar(); 
+    // Panggil renderCalendar() agar kalender dimuat dengan status login saat ini
+    // Ini akan memicu auth.onAuthStateChanged untuk showApp atau showDemo
+    // renderCalendar();
 });
 </script>
 </body>
