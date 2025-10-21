@@ -8,23 +8,15 @@
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ProfitKu: Aplikasi Kalender Profit Trading Harian Gratis</title>
+<title>ProfitKu: Aplikasi Kalender Profit Trading Harian Gratis (Lokal)</title>
 
 <link rel="icon" type="image/png" href="logo.png" /> 
 <link rel="manifest" href="manifest.json">
 
 <meta property="og:url" content="https://firoserdyan-blip.github.io/" /> 
 <meta property="og:title" content="ProfitKu: Kalender Profit Trading Harian Gratis" />
-<meta property="og:description" content="Lupakan Excel yang rumit. Aplikasi web gratis untuk trader dan investor yang ingin melacak dan menganalisis performa profit dan kerugian harian dengan kalender interaktif. Tinjau performa trading Anda sekarang!" />
+<meta property="og:description" content="Aplikasi web gratis untuk trader dan investor yang ingin melacak dan menganalisis profit/rugi harian dengan kalender interaktif. Data tersimpan lokal di perangkat Anda." />
 <meta property="og:image" content="https://firoserdyan-blip.github.io/logo.png" />
-
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-LZ7ZQJC86F"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-LZ7ZQJC86F');
-</script>
 
 
 <style>
@@ -101,25 +93,17 @@ header{display:flex;justify-content:space-between;align-items:center;flex-wrap:w
 
 /* KONTROL HEADER BARU */
 .controls{display:flex;gap:8px;align-items:center; flex-wrap: wrap;} 
-.login-status-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-/* STYLE BARU UNTUK PERINGATAN MERAH */
-.login-alert {
-    color: var(--red);
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 1.2;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid rgba(220, 38, 38, 0.2);
-    background: rgba(220, 38, 38, 0.05);
-    text-align: right;
-}
-[data-theme="dark"] .login-alert {
-    background: rgba(220, 38, 38, 0.2);
+/* STYLE BARU UNTUK PERINGATAN LOKAL */
+.local-status-alert {
+    color: var(--text); 
+    font-weight: 600; 
+    font-size: 14px; 
+    line-height: 1.2; 
+    padding: 6px 8px; 
+    border-radius: 6px; 
+    border: 1px solid var(--input-border); 
+    background: var(--card); 
+    text-align: right; 
 }
 /* --------------------------------- */
 
@@ -197,7 +181,7 @@ input[type=date], select, input[type=text]{
 .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
 .btn.danger{background:#dc2626; color:white; padding:8px 10px; border-radius:8px; border:0; cursor:pointer;} 
 
-/* CSS untuk Modal (Editor, About) */
+/* CSS untuk Modal (Editor, Login, About) */
 .modal-overlay {
     position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); 
     z-index:1000; align-items:center; justify-content:center;
@@ -283,8 +267,7 @@ textarea {
     }
     
     .controls {width: auto; justify-content: flex-end;}
-    .login-status-group { flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
-    .login-alert { text-align: center; width: 100%; }
+    .local-status-alert { text-align: center; width: 100%; margin-top: 0; }
     
     .summary {max-width: none;}
     .stat {min-width: 100%;}
@@ -333,9 +316,8 @@ textarea {
         </div>
         
         <div class="controls">
-            <div class="login-alert">Data tersimpan di perangkat Anda (Lokal)</div>
-            <div class="theme-toggle" id="themeToggle" style="margin-top:0;">
-                <span class="icon">☀️</span> <span id="themeLabel">Terang</span>
+            <div id="localDataStatus" class="local-status-alert">
+                Data tersimpan di perangkat Anda (Lokal)
             </div>
         </div>
     </header>
@@ -349,6 +331,9 @@ textarea {
             </div>
 
             <div class="actions">
+                <div class="theme-toggle" id="themeToggle" style="margin-top:0;">
+                    <span class="icon">☀️</span> <span id="themeLabel">Terang</span>
+                </div>
                 <select id="currencySelect" style="margin-top:0; max-width: 100px;">
                     <option value="IDR">IDR (Rp)</option>
                     <option value="USD">USD ($)</option>
@@ -389,11 +374,8 @@ textarea {
         </div>
         
         <div class="main-footer">
-            <div class="footer-note">Data tersimpan di perangkat Anda (Local Storage), data tidak masuk ke server kami.</div>
-            <div style="display:flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                <a href="privacy-policy.html" target="_blank" class="btn ghost footer-btn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Privacy Policy</a>
-                <button class="btn ghost footer-btn" id="showAboutModalBtn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Tentang Website & Fitur</button>
-            </div>
+            <div class="footer-note">Profit Calendar Anda menggunakan penyimpanan lokal, data tidak dikirim ke server.</div>
+            <button class="btn ghost footer-btn" id="showAboutModalBtn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Tentang Aplikasi & Privacy Policy</button>
         </div>
         </div>
 </div>
@@ -423,9 +405,15 @@ textarea {
     <div class="modal-content-container" style="max-width: 600px;">
         <h3 style="margin-top: 0; color: var(--accent);">ProfitKu: Aplikasi Kalender Profit & Loss Harian</h3>
         
-        <p style="font-size: 14px; color: var(--text);">Selamat datang di ProfitKu, aplikasi web (Single Page Application) yang dirancang untuk membantu trader, investor, dan pelaku bisnis online melacak riwayat keuangan harian mereka dengan mudah. Kami mengatasi masalah lupa mencatat profit/loss harian dari berbagai sumber seperti trading saham, crypto, forex, atau bisnis online dengan sistem kalender yang efisien.</p>
-        
-        <p style="font-size: 14px; color: var(--red); font-weight: 600;">PENTING: Aplikasi ini TIDAK memiliki fitur Login/Daftar. Semua data yang Anda masukkan disimpan secara lokal di perangkat Anda (Local Storage) dan TIDAK dikirim ke server mana pun.</p>
+        <p style="font-size: 14px; color: var(--text);">Selamat datang di ProfitKu, aplikasi web (Single Page Application) yang dirancang untuk membantu trader, investor, dan pelaku bisnis online melacak riwayat keuangan harian mereka dengan mudah. Aplikasi ini **tidak memerlukan Login/Daftar** dan **tidak mengirim data apapun ke server**. Semua data profit/loss Anda diisolasi dan **tersimpan sepenuhnya secara lokal** di *browser* perangkat Anda.</p>
+
+        <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">Privacy Policy:</h4>
+        <ul style="font-size: 14px; color: var(--muted); padding-left: 20px; margin-top: 5px; list-style-type: square;">
+            <li>✅ **Penyimpanan Lokal:** Semua data Profit/Loss dan konfigurasi mata uang disimpan menggunakan fitur **Local Storage** pada *browser* perangkat Anda.</li>
+            <li>✅ **Tanpa Pengiriman Data:** Aplikasi **TIDAK** mengirim data profit/loss Anda ke server eksternal, cloud, atau database manapun.</li>
+            <li>✅ **Tanpa Akun:** Aplikasi tidak memerlukan registrasi, login, atau informasi pribadi.</li>
+            <li>✅ **Data Isolatf:** Data Anda hanya dapat diakses melalui perangkat dan *browser* tempat data tersebut dimasukkan.</li>
+        </ul>
 
         <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">Fitur Utama ProfitKu:</h4>
         <ul style="font-size: 14px; color: var(--muted); padding-left: 20px; margin-top: 5px; list-style-type: square;">
@@ -433,36 +421,29 @@ textarea {
             <li>✅ **Dukungan Multi-Mata Uang:** Catat profit dalam IDR, USD, EUR, JPY, hingga Bitcoin (₿).</li>
             <li>✅ **Ringkasan Otomatis:** Dapatkan total profit bulanan dan rata-rata profit per hari secara otomatis.</li>
             <li>✅ **Catatan Harian:** Tambahkan deskripsi singkat pada setiap entri kalender.</li>
-            <li>✅ **Ekspor Data:** Export semua data profit Anda ke file CSV kapan saja.</li>
-            <li>✅ **Data Aman (Lokal):** Data disimpan hanya di perangkat Anda sendiri.</li>
+            <li>✅ **Ekspor Data:** Export semua data profit Anda ke file CSV kapan saja untuk analisis lebih lanjut.</li>
         </ul>
-
-        <h4 style="margin-bottom: 8px; color: var(--text); margin-top: 20px;">FAQ (Pertanyaan Umum)</h4>
-        <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah data saya aman?**</p>
-        <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya. Data Anda disimpan secara lokal (Local Storage) di *browser* perangkat Anda. Kami tidak memiliki akses ke data tersebut. Namun, jika Anda menghapus *cache* atau menggunakan *browser* yang berbeda, data Anda bisa hilang.</p>
-        
-        <p style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">**Apakah aplikasi ini gratis?**</p>
-        <p style="font-size: 14px; color: var(--text); margin-top: 0;">Ya, ProfitKu sepenuhnya gratis. Kami menggunakan AdSense untuk menutupi biaya hosting.</p>
         
         <button class="btn" id="closeAboutModalBtn" style="margin-top: 20px; width: 100%;">Tutup</button>
     </div>
 </div>
 <script>
-// 💾 KODE JAVASCRIPT HANYA MENGGUNAKAN LOCAL STORAGE
+// SELURUH KODE JAVASCRIPT FINAL UNTUK APLIKASI LOKAL (TANPA FIREBASE/LOGIN)
 document.addEventListener('DOMContentLoaded', () => {
     
-    const LOCAL_STORAGE_KEY = 'profitku_v2_data';
+    // --- KONSTANTA & INIALISASI ---
+    const LOCAL_STORAGE_KEY = 'profitku_local_data';
 
     const CURRENCY_SYMBOLS = {
         'USD': '$', 'IDR': 'Rp', 'EUR': '€', 'JPY': '¥', 'BTC': '₿',
     };
     
-    // Structure: { currentCurrency: 'IDR', allEntries: { 'IDR': { '2025-10-21': { amount: 100, note: '...' } } } }
-    let data = loadData(); 
+    // Struktur Data: { currentCurrency: 'IDR', allEntries: { 'IDR': { '2025-10-21': { amount: 1000, note: '' } } } }
+    let data = { currentCurrency: 'IDR', allEntries: {} };
     
     const html = document.documentElement; 
     
-    // Elemen Header/Controls
+    // Elemen Controls
     const currencySelect = document.getElementById('currencySelect'); 
     const resetDataBtn = document.getElementById('resetDataBtn');
 
@@ -498,30 +479,42 @@ document.addEventListener('DOMContentLoaded', () => {
         return data.allEntries[data.currentCurrency] || {};
     }
     
-    // FUNGSI LOAD DATA (LOCAL STORAGE)
-    function loadData(){ 
+    // --- PENYIMPANAN DATA LOKAL (LOCAL STORAGE) ---
+
+    function loadLocalData(){ 
         try {
-            const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-            let loadedData = stored ? JSON.parse(stored) : { allEntries: {}, currentCurrency: 'IDR' };
-            
-            // Cleanup: Pastikan structure selalu benar
-            if (!loadedData.allEntries) loadedData.allEntries = {};
-            if (!loadedData.currentCurrency) loadedData.currentCurrency = 'IDR';
-
-            // Migrate old structure if needed (for simplicity, we assume entries are already structured correctly or will be fixed on save)
-            
-            return loadedData;
-
+            const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (storedData) {
+                const loadedData = JSON.parse(storedData);
+                
+                // Migrasi data lama (jika hanya ada 'entries' bukan 'allEntries')
+                if (loadedData.entries && !loadedData.allEntries) {
+                    loadedData.allEntries = { 'IDR': loadedData.entries };
+                    delete loadedData.entries;
+                }
+                
+                // Normalisasi struktur (memastikan semua entri punya { amount, note})
+                for (const currency in loadedData.allEntries) {
+                    for (const key in loadedData.allEntries[currency]) {
+                        if (typeof loadedData.allEntries[currency][key] === 'number') {
+                            loadedData.allEntries[currency][key] = { amount: loadedData.allEntries[currency][key], note: '' }; 
+                        }
+                    }
+                }
+                
+                return {
+                    currentCurrency: loadedData.currentCurrency || 'IDR',
+                    allEntries: loadedData.allEntries || {}
+                };
+            }
         } catch (error) {
             console.error("Error loading data from Local Storage:", error);
-            return { allEntries: {}, currentCurrency: 'IDR' }; 
         }
+        return { currentCurrency: 'IDR', allEntries: {} }; 
     }
 
-    // FUNGSI SAVE DATA (LOCAL STORAGE)
-    function saveData(){ 
+    function saveLocalData(){ 
         try {
-            // Clean up empty entries before saving
             const entriesToSave = {};
             for (const currency in data.allEntries) {
                 const cleanedCurrencyEntries = {};
@@ -529,6 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const entry = data.allEntries[currency][ymd];
                     const amount = Number(entry.amount); 
                     
+                    // Hanya simpan entri yang memiliki data (amount atau note)
                     if (amount !== 0 || entry.note.trim() !== '') {
                          cleanedCurrencyEntries[ymd] = { amount: amount, note: entry.note };
                     }
@@ -539,18 +533,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             data.allEntries = entriesToSave;
-
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+            
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+                allEntries: data.allEntries,
+                currentCurrency: data.currentCurrency
+            }));
         } catch (error) {
             console.error("Error saving data to Local Storage:", error);
             alert("Gagal menyimpan data ke perangkat Anda.");
         }
     }
     
-    function resetCurrentCurrencyData() {
+    function resetLocalData() {
         const currentCurrency = data.currentCurrency;
         
-        const confirm1 = confirm(`PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda untuk mata uang ${currentCurrency} yang tersimpan di perangkat ini.\n\nApakah Anda YAKIN ingin melanjutkan?`);
+        const confirm1 = confirm(`PERINGATAN! Tindakan ini akan menghapus SEMUA data profit/loss Anda untuk mata uang ${currentCurrency} dari perangkat ini.\n\nApakah Anda YAKIN ingin melanjutkan?`);
         
         if (!confirm1) {
             return; 
@@ -559,13 +556,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirm2 = confirm(`PERINGATAN AKHIR! Semua data ${currentCurrency} Anda akan hilang PERMANEN dari perangkat ini. Pastikan Anda sudah meng-Export CSV.\n\nTekan OK untuk menghapus SEMUA DATA ${currentCurrency}.`);
 
         if (confirm2) {
-            delete data.allEntries[currentCurrency];
-            saveData();
-            alert(`Data ${currentCurrency} berhasil direset dari Local Storage.`);
-            renderCalendar(); 
+            try {
+                // Hapus hanya mata uang yang aktif
+                if (data.allEntries[currentCurrency]) {
+                     delete data.allEntries[currentCurrency];
+                }
+                
+                saveLocalData(); // Simpan perubahan ke Local Storage
+                
+                alert(`Data ${currentCurrency} berhasil direset.`);
+                renderCalendar(); 
+            } catch (error) {
+                console.error("Error deleting data from Local Storage:", error);
+                alert("Gagal mereset data. Silakan coba lagi.");
+            }
         }
     }
 
+    // --- FUNGSI UTILITY & THEME ---
     function formatCurrency(amount, currencyCode) {
         const symbol = CURRENCY_SYMBOLS[currencyCode] || '$';
         const isLoss = amount < 0;
@@ -601,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return formattedString;
         }
     }
-    
+
     function applyTheme(theme) {
         html.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
@@ -644,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('monthLabel').textContent = new Date(viewYear,viewMonth,1).toLocaleString(userLocale, {month:'long'})+' '+viewYear;
     }
     
-    // --- RENDER CALENDAR ---
+    // --- RENDER KALENDER & SUMMARY ---
     function renderCalendar(){
       const grid = document.getElementById('calendarGrid'); 
       if(!grid) return; 
@@ -690,47 +698,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSummary();
     }
     
-    function openEditor(ymd, amt, note) {
-      if (!editorModal) return;
-      editingYMD = ymd;
-      
-      editorTitle.textContent = `Edit Data ${ymd} (${data.currentCurrency})`; 
-      
-      editorAmtInput.value = amt === 0 ? '' : String(amt); 
-      editorNoteInput.value = note || ''; 
-      editorModal.style.display = 'flex'; 
-      editorAmtInput.focus();
-    }
-    
-    function closeEditor() {
-      if (editorModal) editorModal.style.display = 'none'; 
-      editingYMD = null;
-    }
-    
-    function parseInput(inputString, currency) {
-        let cleanString = inputString.trim();
-
-        if (cleanString === '') {
-            return 0;
-        }
-
-        cleanString = cleanString.replace(/[^\d,\.\-]/g, '');
-
-        if (currency === 'IDR') {
-            cleanString = cleanString.replace(/\./g, '');
-            cleanString = cleanString.replace(/,/g, '.');
-        } else {
-            cleanString = cleanString.replace(/,/g, '.');
-        }
-
-        const num = Number(cleanString);
-        
-        if (isNaN(num)) {
-            return null;
-        }
-        return num;
-    }
-
     function updateSummary(){
         const monthTotalEl = document.getElementById('monthTotal');
         const avgDayEl = document.getElementById('avgDay');
@@ -777,16 +744,56 @@ document.addEventListener('DOMContentLoaded', () => {
         quickAmt.placeholder = `Profit ${currentCurrency} (cth: 500.000 atau 10,50)`;
     }
     
-    // --- ABOUT MODAL HANDLERS ---
-    document.getElementById('showAboutModalBtn').addEventListener('click', () => {
-        if(aboutModal) aboutModal.style.display = 'flex';
-    });
+    // --- MODAL EDITOR ---
+    function openEditor(ymd, amt, note) {
+      if (!editorModal) return;
+      editingYMD = ymd;
+      
+      editorTitle.textContent = `Edit Data ${ymd} (${data.currentCurrency})`; 
+      
+      editorAmtInput.value = amt === 0 ? '' : String(amt); 
+      editorNoteInput.value = note || ''; 
+      editorModal.style.display = 'flex'; 
+      editorAmtInput.focus();
+    }
     
-    document.getElementById('closeAboutModalBtn').addEventListener('click', () => {
-        if(aboutModal) aboutModal.style.display = 'none';
-    });
+    function closeEditor() {
+      if (editorModal) editorModal.style.display = 'none'; 
+      editingYMD = null;
+    }
     
-    // --- NAVIGASI DAN QUICK SAVE ---
+    function parseInput(inputString, currency) {
+        let cleanString = inputString.trim();
+
+        if (cleanString === '') {
+            return 0;
+        }
+
+        cleanString = cleanString.replace(/[^\d,\.\-]/g, '');
+
+        if (currency === 'IDR') {
+            cleanString = cleanString.replace(/\./g, '');
+            cleanString = cleanString.replace(/,/g, '.');
+        } else {
+            cleanString = cleanString.replace(/,/g, '.');
+        }
+
+        const num = Number(cleanString);
+        
+        if (isNaN(num)) {
+            return null;
+        }
+        return num;
+    }
+
+    // --- INITIALIZATION ---
+    data = loadLocalData();
+    if(currencySelect) currencySelect.value = data.currentCurrency; 
+    renderCalendar();
+    
+    // --- EVENT LISTENERS ---
+
+    // Navigasi
     const prevBtn = document.getElementById('prev');
     if(prevBtn) prevBtn.addEventListener('click',()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
     
@@ -796,9 +803,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayBtn = document.getElementById('todayBtn');
     if(todayBtn) todayBtn.addEventListener('click',()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); });
 
-    // --- LOGIKA QUICK SAVE ---
-    if(quickSave) quickSave.addEventListener('click', async ()=>{
-      
+    // Quick Save
+    if(quickSave) quickSave.addEventListener('click', ()=>{
       if(!quickDate) return; 
       const d = quickDate.value;
       const a = quickAmt.value;
@@ -815,14 +821,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       data.allEntries[currentCurrency][d] = { amount: num, note: '' }; 
       
-      saveData(); 
+      saveLocalData(); 
       renderCalendar();
       quickAmt.value='';
     });
     
-    // --- EDITOR MODAL HANDLERS ---
+    // Save Editor
+    const saveEditorBtn = document.getElementById('saveEditorBtn');
     if(saveEditorBtn) saveEditorBtn.addEventListener('click', () => {
-      
       if (!editingYMD) return; 
       const n = editorAmtInput.value.trim();
       const noteText = editorNoteInput.value.trim(); 
@@ -842,44 +848,51 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       if (finalNum === 0 && noteText === '') {
-          // If amount is 0 and note is empty, delete entry
           delete data.allEntries[currentCurrency][editingYMD];
       } else {
           data.allEntries[currentCurrency][editingYMD] = { amount: finalNum, note: noteText };
       }
       
       closeEditor();
-      saveData(); 
+      saveLocalData(); 
       renderCalendar();
     });
 
     const closeEditorBtn = document.getElementById('closeEditorBtn');
     if(closeEditorBtn) closeEditorBtn.addEventListener('click', closeEditor);
     
+    // Delete Editor
+    const deleteEditorBtn = document.getElementById('deleteEditorBtn');
     if(deleteEditorBtn) deleteEditorBtn.addEventListener('click', () => {
-      
       const currentCurrency = data.currentCurrency;
       if(confirm(`Yakin hapus data hari ${editingYMD} (${currentCurrency})? (Profit & Catatan)`)){
           delete data.allEntries[currentCurrency][editingYMD];
           closeEditor();
-          saveData(); 
+          saveLocalData(); 
           renderCalendar();
       }
     });
     
-    // --- HANDLER: RESET DATA MATA UANG AKTIF ---
-    if(resetDataBtn) resetDataBtn.addEventListener('click', () => {
-        resetCurrentCurrencyData();
-    });
+    // Reset Data
+    if(resetDataBtn) resetDataBtn.addEventListener('click', resetLocalData);
 
-    // --- CURRENCY CHANGE ---
+    // Currency Change
     if(currencySelect) currencySelect.addEventListener('change', (e) => {
         data.currentCurrency = e.target.value; 
-        saveData(); 
+        saveLocalData(); 
         renderCalendar();
     });
 
-    // --- EXPORT CSV DENGAN SEMUA MATA UANG ---
+    // About/Privacy Modal
+    document.getElementById('showAboutModalBtn').addEventListener('click', () => {
+        if(aboutModal) aboutModal.style.display = 'flex';
+    });
+    
+    document.getElementById('closeAboutModalBtn').addEventListener('click', () => {
+        if(aboutModal) aboutModal.style.display = 'none';
+    });
+
+    // Export CSV (Tetap sama, mengambil dari semua mata uang)
     const exportCsv = document.getElementById('exportCsv');
     if(exportCsv) exportCsv.addEventListener('click', ()=>{
         const rows=[['date','profit_amount', 'currency', 'note']]; 
@@ -915,11 +928,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if(quickDate) quickDate.value = formatYMD(today.getFullYear(),today.getMonth(),today.getDate());
-    
-    // Load initial currency selection
-    if(currencySelect) currencySelect.value = data.currentCurrency;
-    
-    renderCalendar(); 
 });
 </script>
 </body>
