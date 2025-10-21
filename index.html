@@ -388,7 +388,7 @@ textarea {
         <div class="main-footer">
             <div class="footer-note">Data yang dimasukkan saat demo (belum login) tidak akan tersimpan.</div>
             <div style="display:flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                <a href="URL_PRIVACY_POLICY_ANDA" target="_blank" class="btn ghost footer-btn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Privacy Policy</a>
+                <a href="privacy-policy.html" target="_blank" class="btn ghost footer-btn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Privacy Policy</a>
                 <button class="btn ghost footer-btn" id="showAboutModalBtn" style="color: var(--text); border: 1px solid var(--input-border); margin-top: 0;">Tentang Website & Fitur</button>
             </div>
         </div>
@@ -471,10 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🔑 KONFIGURASI FIREBASE (TIDAK BERUBAH)
     const firebaseConfig = {
       apiKey: "AIzaSyDIRmr2lJWqmoeoZHYIpakc8N_11JQ1Mo8",
-      authDomain:"profitku-a5f3a.firebaseapp.com",
+      authDomain: "profitku-a5f3a.firebaseapp.com",
       databaseURL: "https://profitku-a5f3a-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "profitku-a5f3a",
-      storageBucket: "profitku-a5f3a.firebasestorage.app",
+      storageBucket: "profitku-a5f3a.firebase-storage.app",
       messagingSenderId: "222392994535",
       appId: "1:222392994535:web:a8e13f3238dedaae367042",
       measurementId: "G-LZ7ZQJC86F"
@@ -545,7 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // FUNGSI LOAD DATA, SAVE DATA, FORMAT CURRENCY (TIDAK BERUBAH SIGNIFIKAN)
     async function loadData(uid){ 
-        // ... (Fungsi loadData yang sama)
         try {
             const snapshot = await database.ref(getDbPath(uid)).once('value');
             const loadedData = snapshot.val() || { entries: {}, currency: 'IDR' }; 
@@ -577,7 +576,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function saveData(uid){ 
         if (!uid) return;
-        // ... (Fungsi saveData yang sama)
         try {
             const entriesToSave = {};
             for (const currency in data.allEntries) {
@@ -636,7 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatCurrency(amount, currencyCode) {
-        // ... (Fungsi formatCurrency yang sama)
         const symbol = CURRENCY_SYMBOLS[currencyCode] || '$';
         const isLoss = amount < 0;
         const isProfit = amount > 0;
@@ -702,7 +699,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderWeekdayHeader() {
-        // ... (Fungsi renderWeekdayHeader yang sama)
         const weekdayHeader = document.getElementById('weekdayHeader');
         if (!weekdayHeader) return;
         weekdayHeader.innerHTML = ''; 
@@ -797,7 +793,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function parseInput(inputString, currency) {
-        // ... (Fungsi parseInput yang sama)
         let cleanString = inputString.trim();
 
         if (cleanString === '') {
@@ -822,7 +817,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateSummary(){
-        // ... (Fungsi updateSummary yang sama)
         const monthTotalEl = document.getElementById('monthTotal');
         const avgDayEl = document.getElementById('avgDay');
         const daysCountEl = document.getElementById('daysCount');
@@ -983,7 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (user) {
           showApp(user); // Ambil data dan tampilkan
       } else {
-  showDemo(); // Tampilkan kalender kosong (mode demo)
+          showDemo(); // Tampilkan kalender kosong (mode demo)
       }
       updateAuthStatusDisplay(); // Pastikan status di header diperbarui
     });
@@ -1102,7 +1096,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EXPORT CSV DENGAN SEMUA MATA UANG ---
     const exportCsv = document.getElementById('exportCsv');
     if(exportCsv) exportCsv.addEventListener('click', ()=>{
-        // ... (Fungsi exportCsv yang sama)
         const rows=[['date','profit_amount', 'currency', 'note']]; 
         let totalProfitPerCurrency = {};
         
