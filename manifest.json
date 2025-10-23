@@ -1,9 +1,9 @@
 {
   "name": "ProfitKu Calendar",
   "short_name": "ProfitKu",
-  "id": "/profitkucalender-pwa-id/", 
-  "start_url": "index.html", 
-  "scope": ".", 
+  "id": "/profitku-pwa-2025-a/", /* ID UNIK KHUSUS UNTUK PROFITKU */
+  "start_url": "./index.html", 
+  "scope": "./", 
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
