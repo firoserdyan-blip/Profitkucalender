@@ -1,10 +1,11 @@
-const CACHE_NAME = 'profitku-calendar-v1.1.0'; // Ganti versi untuk memaksa update
+const CACHE_NAME = 'profitku-calendar-v1.2.0'; // Ganti versi untuk memaksa update!
 const urlsToCache = [
-  '/', // Harus ada untuk menangani root path
+  '/', 
   './index.html',
   './logo.png',
   './manifest.json',
-  // Tambahkan file CSS/JS/Aset lain yang Anda miliki
+  // Pastikan Anda menambahkan semua file CSS dan JS yang diperlukan di sini!
+  // Misalnya: './style.css', './script.js', dll.
 ];
 
 // Instalasi Service Worker
@@ -12,7 +13,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache. Caching assets...');
+        console.log('Opened cache. Caching essential assets for ProfitKu...');
         return cache.addAll(urlsToCache);
       })
       .catch(err => {
@@ -38,34 +39,29 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch Request: Ini adalah bagian perbaikan 404
+// Fetch Request: LOGIKA PERBAIKAN 404
 self.addEventListener('fetch', event => {
-  // Hanya proses GET requests
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Jika aset ditemukan di cache, kembalikan response cache
+        // 1. Aset Ditemukan di Cache
         if (response) {
           return response;
         }
 
-        // Jika tidak di cache, coba fetch dari jaringan
+        // 2. Coba Ambil dari Jaringan
         return fetch(event.request).catch(error => {
-          // *** LOGIKA PERBAIKAN 404 UTAMA DI SINI ***
-          // Jika fetch gagal (karena offline) dan ini adalah permintaan navigasi
-          // (mencari halaman HTML), kembalikan index.html dari cache.
+          // 3. Jika Jaringan Gagal (Offline/404), Lakukan Fallback
           
-          const requestUrl = new URL(event.request.url);
-
-          // Cek apakah request adalah untuk halaman HTML (navigasi) dan bukan aset lain
+          // Jika ini adalah permintaan navigasi (mencari halaman HTML), kembalikan index.html
           if (event.request.mode === 'navigate' || 
               (event.request.destination === 'document')) {
              
-              console.log('Fetch failed during navigation (likely offline). Serving index.html from cache.');
+              console.log('Navigation request failed. Serving index.html as fallback for ProfitKu.');
               
-              // Coba ambil index.html dari cache
+              // Ini adalah kunci untuk mengatasi 404 pada PWA GitHub Pages
               return caches.match('./index.html');
           }
           
